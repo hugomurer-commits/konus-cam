@@ -156,11 +156,27 @@
 (function(){
   'use strict';
 
+  // STUN descobre o IP publico e basta quando os dois lados conseguem se
+  // enxergar. Quando o NAT nao deixa (celular em 4G, quiosque atras do
+  // roteador), o TURN retransmite. O relay so entra quando a conexao direta
+  // falha, entao ele nao custa banda a toa.
+  //
+  // O TURN nao ve a imagem: o video vai cifrado ponta a ponta (DTLS-SRTP) e
+  // o servidor so encaminha pacotes que nao consegue abrir.
   var ICE = { iceServers: [
     { urls: 'stun:stun.l.google.com:19302' },
     { urls: 'stun:stun1.l.google.com:19302' },
-    { urls: 'stun:stun.cloudflare.com:3478' }
+    { urls: 'stun:stun.cloudflare.com:3478' },
+    { urls: 'turn:openrelay.metered.ca:80',            username:'openrelayproject', credential:'openrelayproject' },
+    { urls: 'turn:openrelay.metered.ca:443',           username:'openrelayproject', credential:'openrelayproject' },
+    { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username:'openrelayproject', credential:'openrelayproject' }
   ]};
+
+  // ?relay=1 obriga tudo a passar pelo TURN, ignorando conexao direta.
+  // Serve para testar o TURN isoladamente — nao usar no dia a dia.
+  if (new URLSearchParams(location.search).get('relay') === '1') {
+    ICE.iceTransportPolicy = 'relay';
+  }
 
   // Perfil de captura enxuto: esta máquina é um AMD E2-7110 sem encoder de
   // hardware e divide a CPU com o BeeFood. 640x360@12 é o teto seguro.
