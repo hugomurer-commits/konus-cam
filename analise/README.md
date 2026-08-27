@@ -63,3 +63,74 @@ script corretamente acusou ~50% em todos os oito sinais — o instrumento está
 calibrado. **Nenhuma medição com dados reais da Binance foi feita ainda**, por
 falta de acesso à API no ambiente onde o script foi escrito. Essa parte é com
 você.
+
+---
+
+# Busca ampla de sinais — `busca_de_sinais.py`
+
+O `testar_previsao.py` testa 8 sinais fixos. Este aqui testa **68 variações**
+de uma vez (RSI em 3 períodos × 4 limiares, 5 pares de médias, 2 MACDs,
+momentum e reversão de 1 a 4 candles, 9 configurações de Bollinger, filtros de
+volume) — e é honesto sobre o que isso significa.
+
+## O problema de "testar até achar algo"
+
+Se você testa 68 sinais e fica com o melhor, **sempre** vai achar um vencedor —
+mesmo em dados 100% aleatórios. A 5% de significância, ~3 dos 68 vão passar por
+puro acaso. Escolher o melhor de muitos não é pesquisa, é loteria com uma etapa
+a mais.
+
+## As duas travas
+
+**1. Correção para testes múltiplos (Benjamini-Hochberg).** Desconta
+matematicamente a vantagem de ter testado muita coisa. Um sinal que passaria
+sozinho pode não passar quando estava entre 68.
+
+**2. Validação fora da amostra.** Os dados são cortados em 70% / 30%. A busca
+roda só nos primeiros 70%. Quem sobrevive é testado de novo nos 30% finais, que
+nunca foram vistos. Sorte não se repete em dados novos; vantagem real, sim.
+
+## Duas perguntas, duas respostas
+
+O relatório separa o que quase todo curso mistura:
+
+| Coluna | Pergunta |
+|---|---|
+| `real?` | O sinal prevê alguma coisa? (acima de 50% com folga estatística) |
+| `paga?` | A vantagem cobre o payout da binária? (acima de 54,6% com 83%) |
+
+Um sinal pode ser **real e mesmo assim perder dinheiro** — é o caso mais comum.
+A vantagem existe, mas é menor que a mordida da corretora.
+
+## Como rodar
+
+```bash
+python3 busca_de_sinais.py                          # BTCUSDT, payout 83%
+python3 busca_de_sinais.py --par ETHUSDT
+python3 busca_de_sinais.py --payout 0.90 --candles 8000
+```
+
+## Autoteste — a ferramenta é confiável?
+
+Uma ferramenta que sempre responde "não achei nada" seria inútil e você não
+teria como saber. Por isso ela testa a si mesma:
+
+```bash
+python3 busca_de_sinais.py --autoteste
+```
+
+Ela roda a busca completa em duas séries inventadas: uma de **ruído puro**
+(onde o certo é não achar nada) e uma com uma **vantagem real plantada** (onde
+o certo é achar). Só se comporta como confiável se acertar as duas.
+
+Resultado da última execução:
+
+```
+A) ruído puro          -> achou 0 sinais   OK (correto)
+B) vantagem plantada   -> achou 2 sinais   OK (correto)
+Ferramenta confiável.
+```
+
+O teste B ainda revela o ponto central: mesmo com vantagem **real** plantada
+nos dados, os sinais encontrados marcaram `real? SIM` e `paga? não`. Havia
+previsão de verdade e ainda assim se perderia dinheiro na binária.
