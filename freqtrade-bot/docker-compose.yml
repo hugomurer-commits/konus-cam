@@ -1,0 +1,25 @@
+# Freqtrade via Docker - jeito mais facil de rodar em qualquer maquina.
+#
+# Subir o bot:      docker compose up -d
+# Ver o que faz:    docker compose logs -f
+# Parar:            docker compose down
+#
+services:
+  freqtrade:
+    image: freqtradeorg/freqtrade:stable
+    container_name: konus-bot
+    restart: unless-stopped
+    volumes:
+      - "./user_data:/freqtrade/user_data"
+      - "./config.json:/freqtrade/config.json:ro"
+      - "./config.secrets.json:/freqtrade/config.secrets.json:ro"
+    ports:
+      # Painel web em http://127.0.0.1:8080 (so acessivel da propria maquina).
+      - "127.0.0.1:8080:8080"
+    command: >
+      trade
+      --logfile /freqtrade/user_data/logs/freqtrade.log
+      --db-url sqlite:////freqtrade/user_data/tradesv3.sqlite
+      --config /freqtrade/config.json
+      --config /freqtrade/config.secrets.json
+      --strategy KonusTrend
