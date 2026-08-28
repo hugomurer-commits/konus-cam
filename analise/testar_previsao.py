@@ -141,6 +141,7 @@ def main():
           f"{empate:.1%} das vezes.\n")
 
     algum_passou = False
+    analisados = 0
 
     for intervalo in ["1m", "5m", "15m"]:
         try:
@@ -148,6 +149,7 @@ def main():
         except Exception as e:
             print(f"[{intervalo}] erro ao baixar: {e}")
             continue
+        analisados += 1
 
         # O que queremos prever: o proximo candle fecha acima da abertura?
         subiu = (df["close"].shift(-1) > df["open"].shift(-1)).astype(object)
@@ -170,6 +172,17 @@ def main():
         print()
 
     print("=" * 74)
+
+    # Sem dado nenhum nao existe conclusao. Nao confunda "baixou e nao achou"
+    # com "nao conseguiu baixar" - a segunda nao mede nada.
+    if analisados == 0:
+        print("NADA FOI MEDIDO - nenhum candle foi baixado.")
+        print("Os erros acima sao de conexao, nao resultado de analise.")
+        print("Resolva o acesso a internet/Binance e rode de novo.")
+        print("NAO conclua nada sobre os sinais a partir desta execucao.")
+        print("=" * 74 + "\n")
+        return 1
+
     if algum_passou:
         print("Algum sinal superou a linha do empate com folga estatistica.")
         print("Confira em outros pares e outros periodos antes de acreditar -")
