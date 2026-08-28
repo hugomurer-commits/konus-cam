@@ -2,28 +2,27 @@
 """
 Busca ampla de sinais preditivos - com as travas que impedem falso positivo.
 
-O PROBLEMA QUE ESTE SCRIPT RESOLVE
-----------------------------------
-Se voce testar 60 sinais diferentes e ficar com o melhor, voce SEMPRE vai
-"encontrar algo" - mesmo em dados completamente aleatorios. Testar muito e
-guardar o vencedor nao e' pesquisa, e' loteria com etapa extra.
+O PROBLEMA
+----------
+Testar 60 sinais e ficar com o melhor SEMPRE "encontra algo", mesmo em dados
+aleatorios. Testar muito e guardar o vencedor nao e' pesquisa, e' loteria com
+etapa extra.
 
-AS DUAS TRAVAS
---------------
-1. CORRECAO PARA TESTES MULTIPLOS (Benjamini-Hochberg): desconta
-   matematicamente a vantagem de ter testado muitos candidatos. Um sinal
-   que passaria sozinho pode nao passar quando estava entre 60.
-
-2. VALIDACAO FORA DA AMOSTRA: os dados sao cortados em dois. A busca roda
-   so na primeira parte. Quem sobrevive e' testado de novo na segunda parte,
-   que o sinal nunca viu. Sorte nao se repete em dados novos; vantagem real,
-   sim.
+AS TRAVAS
+---------
+1. CORRECAO PARA TESTES MULTIPLOS (Benjamini-Hochberg) sobre a descoberta.
+2. VALIDACAO FORA DA AMOSTRA em dados que o sinal nunca viu.
+3. WALK-FORWARD (--janelas N): repete descoberta+validacao em N janelas
+   sequenciais. Vantagem real reaparece em varias janelas; ajuste a um
+   regime especifico aparece em uma so.
+4. RELATORIO DE POTENCIA: quando a amostra e' pequena demais para separar
+   "sem vantagem" de "vantagem lucrativa", ele diz isso em vez de concluir.
 
 Uso:
     pip install requests pandas numpy
     python3 busca_de_sinais.py
-    python3 busca_de_sinais.py --par ETHUSDT --payout 0.83
-    python3 busca_de_sinais.py --autoteste     # prova que a ferramenta funciona
+    python3 busca_de_sinais.py --par ETHUSDT --janelas 4 --candles 20000
+    python3 busca_de_sinais.py --autoteste
 """
 
 import argparse
@@ -33,23 +32,29 @@ import sys
 import numpy as np
 import pandas as pd
 
-from testar_previsao import baixar, rsi, macd
+from testar_previsao import baixar, rsi
 
 
 # ------------------------------------------------------- catalogo de sinais
 
 def gerar_sinais(df: pd.DataFrame) -> dict:
     """
-    Monta dezenas de variacoes dos sinais tecnicos classicos.
+    Variacoes dos sinais tecnicos classicos.
 
     Cada sinal e' um vetor com True (aposta que sobe), False (aposta que
-    desce) ou NaN (sem opiniao naquele candle).
+    desce) ou NaN (sem opiniao).
+
+    IMPORTANTE - sem inversos: "Reversao" e' o complemento exato de
+    "Momentum", e "Bollinger rompe" o de "Bollinger toque". Incluir os dois
+    testa a MESMA hipotese duas vezes: infla o numero de testes (deixando o
+    BH conservador a toa) sem adicionar informacao. A direcao e' tratada na
+    avaliacao, pelo teste bilateral - um sinal com 43% de acerto e' o mesmo
+    achado que seu inverso com 57%.
     """
     s = {}
     fechamento = df["close"]
     verde = (df["close"] > df["open"]).astype(object)
 
-    # --- RSI: sobrevendido sobe, sobrecomprado desce
     for periodo in (7, 14, 21):
         r = rsi(fechamento, periodo)
         for piso in (20, 25, 30, 35):
@@ -60,7 +65,6 @@ def gerar_sinais(df: pd.DataFrame) -> dict:
                 (r > piso) & (r.shift(1) <= piso), True,
                 np.where((r < teto) & (r.shift(1) >= teto), False, np.nan))
 
-    # --- Cruzamento de medias moveis
     for rapida, lenta in ((5, 20), (9, 21), (10, 50), (20, 50), (50, 200)):
         er = fechamento.ewm(span=rapida, adjust=False).mean()
         el = fechamento.ewm(span=lenta, adjust=False).mean()
@@ -69,7 +73,6 @@ def gerar_sinais(df: pd.DataFrame) -> dict:
             (er > el) & (er.shift(1) <= el.shift(1)), True,
             np.where((er < el) & (er.shift(1) >= el.shift(1)), False, np.nan))
 
-    # --- MACD
     for rapida, lenta, sinal_n in ((12, 26, 9), (5, 35, 5)):
         linha = (fechamento.ewm(span=rapida, adjust=False).mean()
                  - fechamento.ewm(span=lenta, adjust=False).mean())
@@ -80,19 +83,15 @@ def gerar_sinais(df: pd.DataFrame) -> dict:
             (linha > sig) & (linha.shift(1) <= sig.shift(1)), True,
             np.where((linha < sig) & (linha.shift(1) >= sig.shift(1)), False, np.nan))
 
-    # --- Momentum e reversao (sequencia de candles)
     for k in (1, 2, 3, 4):
-        seq_alta = verde.shift(1).astype(bool)
-        seq_baixa = ~verde.shift(1).astype(bool)
+        alta = verde.shift(1).astype(bool)
+        baixa = ~verde.shift(1).astype(bool)
         for i in range(2, k + 1):
-            seq_alta &= verde.shift(i).astype(bool)
-            seq_baixa &= ~verde.shift(i).astype(bool)
+            alta &= verde.shift(i).astype(bool)
+            baixa &= ~verde.shift(i).astype(bool)
         s[f"Momentum: {k} candle(s) na mesma direcao"] = np.where(
-            seq_alta, True, np.where(seq_baixa, False, np.nan))
-        s[f"Reversao: apos {k} candle(s) inverte"] = np.where(
-            seq_alta, False, np.where(seq_baixa, True, np.nan))
+            alta, True, np.where(baixa, False, np.nan))
 
-    # --- Bandas de Bollinger: toque (reversao) e rompimento (continuacao)
     for periodo in (10, 20, 30):
         media = fechamento.rolling(periodo).mean()
         desvio = fechamento.rolling(periodo).std()
@@ -100,10 +99,7 @@ def gerar_sinais(df: pd.DataFrame) -> dict:
             sup, inf = media + k * desvio, media - k * desvio
             s[f"Bollinger({periodo},{k}) toque = reverte"] = np.where(
                 fechamento < inf, True, np.where(fechamento > sup, False, np.nan))
-            s[f"Bollinger({periodo},{k}) rompe = segue"] = np.where(
-                fechamento > sup, True, np.where(fechamento < inf, False, np.nan))
 
-    # --- Volume acima da media confirmando a direcao do candle
     for periodo in (10, 20):
         vol_media = df["volume"].rolling(periodo).mean()
         for mult in (1.5, 2.0):
@@ -118,7 +114,6 @@ def gerar_sinais(df: pd.DataFrame) -> dict:
 # ------------------------------------------------------------- estatistica
 
 def avaliar(previsao, real) -> tuple:
-    """Devolve (acertos, total) considerando so os candles com opiniao."""
     prev = pd.Series(previsao).reset_index(drop=True)
     alvo = pd.Series(real).reset_index(drop=True)
     valido = prev.notna() & alvo.notna()
@@ -129,11 +124,7 @@ def avaliar(previsao, real) -> tuple:
 
 
 def pvalor(acertos: int, n: int) -> float:
-    """
-    Probabilidade de obter um resultado tao extremo quanto este por puro
-    acaso, se o sinal nao tivesse valor nenhum (taxa verdadeira = 50%).
-    Teste bilateral por aproximacao normal.
-    """
+    """Teste BILATERAL contra 50%: um sinal anti-preditivo tambem e' achado."""
     if n < 100:
         return 1.0
     z = (acertos / n - 0.5) / math.sqrt(0.25 / n)
@@ -141,93 +132,153 @@ def pvalor(acertos: int, n: int) -> float:
 
 
 def benjamini_hochberg(pvalores: list, alpha: float = 0.05) -> list:
-    """
-    Corrige para testes multiplos. Devolve a lista de indices aprovados.
-
-    Sem isso, testar 60 sinais a 5% produz ~3 "vencedores" so por acaso.
-    """
     m = len(pvalores)
+    if m == 0:
+        return []
     ordenados = sorted(range(m), key=lambda i: pvalores[i])
-    corte = -1
+    corte = 0
     for posicao, indice in enumerate(ordenados, start=1):
         if pvalores[indice] <= (posicao / m) * alpha:
             corte = posicao
-    return ordenados[:corte] if corte > 0 else []
+    return ordenados[:corte]
 
 
 def margem(taxa: float, n: int) -> float:
     return 1.96 * math.sqrt(taxa * (1 - taxa) / n) if n else float("nan")
 
 
-# -------------------------------------------------------------- a pesquisa
+# ------------------------------------------------------------ uma janela
 
-def pesquisar(df: pd.DataFrame, rotulo: str, empate: float, alpha: float = 0.05) -> list:
+def uma_janela(sinais: dict, alvo, ini_t: int, fim_t: int, fim_v: int,
+               empate: float, alpha: float) -> tuple:
     """
-    Roda a busca completa num conjunto de candles e devolve os sinais que
-    sobreviveram as duas travas.
+    Descobre em [ini_t, fim_t) e valida em [fim_t, fim_v).
+
+    Devolve (aprovados_na_descoberta, resultados_da_validacao, n_testados).
+    Cada resultado: (nome, taxa_dirigida, margem, n, invertido, real, paga).
     """
-    alvo = (df["close"].shift(-1) > df["open"].shift(-1)).astype(object)
-    alvo.iloc[-1] = np.nan
-
-    corte = int(len(df) * 0.70)
-    print(f"\n{'='*78}\n{rotulo}")
-    print(f"  descoberta: candles 0 a {corte}   |   "
-          f"validacao: candles {corte} a {len(df)} (nunca vistos)")
-
-    sinais = gerar_sinais(df)
-    print(f"  {len(sinais)} sinais candidatos\n")
-
-    # ---- etapa 1: descoberta
-    nomes, pvals, resultados = [], [], {}
+    nomes, pvals, taxas_desc = [], [], {}
     for nome, prev in sinais.items():
-        acertos, n = avaliar(pd.Series(prev).iloc[:corte], alvo.iloc[:corte])
+        a, n = avaliar(pd.Series(prev).iloc[ini_t:fim_t], alvo.iloc[ini_t:fim_t])
         if n < 100:
             continue
         nomes.append(nome)
-        pvals.append(pvalor(acertos, n))
-        resultados[nome] = (acertos / n, n)
+        pvals.append(pvalor(a, n))
+        taxas_desc[nome] = a / n
 
-    if not nomes:
-        print("  amostra insuficiente.")
-        return []
+    aprovados = [nomes[i] for i in benjamini_hochberg(pvals, alpha)]
+    brutos = sum(p < alpha for p in pvals)
 
-    bruto = [n for n, p in zip(nomes, pvals) if p < alpha]
-    aprovados_idx = benjamini_hochberg(pvals, alpha)
-    aprovados = [nomes[i] for i in aprovados_idx]
-
-    print(f"  passariam sem correcao (p < {alpha}):      {len(bruto)}"
-          f"   <- destes, ~{len(nomes)*alpha:.0f} sao esperados por puro acaso")
-    print(f"  passam COM correcao de testes multiplos:  {len(aprovados)}")
-
-    if not aprovados:
-        print("\n  Nenhum sinal sobreviveu a etapa de descoberta.")
-        return []
-
-    # ---- etapa 2: validacao fora da amostra
-    print(f"\n  Testando os {len(aprovados)} sobreviventes em dados NOVOS:\n")
-    print(f"  {'sinal':<40} {'descoberta':>11} {'validacao':>17} "
-          f"{'real?':>7} {'paga?':>7}")
-    confirmados = []
+    resultados = []
     for nome in aprovados:
-        taxa_desc, _ = resultados[nome]
-        acertos, n = avaliar(pd.Series(sinais[nome]).iloc[corte:], alvo.iloc[corte:])
+        a, n = avaliar(pd.Series(sinais[nome]).iloc[fim_t:fim_v], alvo.iloc[fim_t:fim_v])
         if n < 100:
-            print(f"  {nome:<40} {taxa_desc:>10.1%} {'amostra pequena':>17}"
-                  f"{'-':>8}{'-':>8}")
             continue
-        taxa_val = acertos / n
-        m = margem(taxa_val, n)
-        # Duas perguntas DIFERENTES, respondidas separadamente:
-        #   real  = o sinal preve algo? (piso do intervalo acima de 50%)
-        #   paga  = a vantagem cobre o payout da binaria?
-        real = (taxa_val - m) > 0.5
-        paga = (taxa_val - m) > empate
-        if real:
-            confirmados.append((nome, taxa_val, m, n, paga))
-        print(f"  {nome:<40} {taxa_desc:>10.1%} {taxa_val:>9.1%} ±{m:>5.1%} "
-              f"{'SIM' if real else 'nao':>7} {'SIM' if paga else 'nao':>7}")
+        # A descoberta define a DIRECAO da aposta. Sinal que acertou 43% na
+        # descoberta e' uma aposta invertida - e' assim que o achado
+        # bilateral vira previsao. Sem isso, sinais anti-preditivos entram
+        # na lista e morrem na validacao por construcao, poluindo o relatorio.
+        invertido = taxas_desc[nome] < 0.5
+        taxa = (1 - a / n) if invertido else (a / n)
+        m = margem(taxa, n)
+        resultados.append((nome, taxa, m, n, invertido,
+                           (taxa - m) > 0.5, (taxa - m) > empate))
+    return brutos, len(aprovados), resultados, len(nomes)
 
-    return confirmados
+
+def pesquisar(df: pd.DataFrame, rotulo: str, empate: float,
+              janelas: int = 1, alpha: float = 0.05) -> dict:
+    alvo = (df["close"].shift(-1) > df["open"].shift(-1)).astype(object)
+    alvo.iloc[-1] = np.nan
+    sinais = gerar_sinais(df)
+
+    print(f"\n{'='*80}\n{rotulo}   |   {len(sinais)} sinais candidatos")
+
+    # Walk-forward: metade inicial sempre treina; a outra metade vira N
+    # blocos de teste, cada um precedido por todo o historico anterior.
+    base = len(df) // 2
+    bloco = (len(df) - base) // janelas
+    if bloco < 200:
+        janelas, bloco = 1, len(df) - base
+        print("  (poucos candles para walk-forward; usando janela unica)")
+
+    placar = {}
+    for j in range(janelas):
+        fim_t = base + j * bloco
+        fim_v = fim_t + bloco
+        brutos, n_aprov, resultados, n_test = uma_janela(
+            sinais, alvo, 0, fim_t, fim_v, empate, alpha)
+        print(f"\n  janela {j+1}/{janelas}: treino 0-{fim_t}, teste {fim_t}-{fim_v}")
+        print(f"    {n_test} testados | {brutos} passariam sem correcao | "
+              f"{n_aprov} passam com BH | {len(resultados)} chegaram na validacao")
+        for nome, taxa, m, n, inv, real, paga in resultados:
+            rot = nome + (" [INVERTIDO]" if inv else "")
+            marca = "REAL+PAGA" if paga else ("REAL" if real else "-")
+            print(f"      {rot:<46} {taxa:>6.1%} ±{m:.1%}  n={n:<5} {marca}")
+            if real:
+                placar.setdefault(nome, []).append((taxa, m, n, inv, paga))
+
+    # bloco = candles por janela de validacao. E' o N MAXIMO possivel, de um
+    # sinal que dispara em todo candle; quem dispara menos tem menos potencia.
+    return {"placar": placar, "janelas": janelas, "bloco": bloco}
+
+
+# ---------------------------------------------------------------- relatorio
+
+def relatorio(achados: list, empate: float, args, escopo: list):
+    print(f"\n{'='*80}")
+    total_janelas = sum(a["janelas"] for a in achados)
+    placar_geral = {}
+    for a in achados:
+        for nome, confirmacoes in a["placar"].items():
+            placar_geral.setdefault(nome, []).extend(confirmacoes)
+
+    if placar_geral:
+        print("SINAIS QUE CONFIRMARAM FORA DA AMOSTRA:\n")
+        for nome, cs in sorted(placar_geral.items(), key=lambda x: -len(x[1])):
+            taxas = [c[0] for c in cs]
+            paga = sum(c[4] for c in cs)
+            print(f"  {nome}")
+            print(f"    confirmou em {len(cs)} de {total_janelas} janelas | "
+                  f"acerto {min(taxas):.1%}-{max(taxas):.1%} | "
+                  f"cobriu o payout em {paga} delas")
+        print("\n  Confirmar em 1 de varias janelas e' ajuste a um regime, nao")
+        print("  vantagem. Exija a maioria antes de arriscar dinheiro.")
+    else:
+        print("NENHUM sinal confirmou fora da amostra.")
+
+    # ---- potencia: o que esta amostra conseguiria ter detectado?
+    print(f"\n{'-'*80}\nPOTENCIA E ESCOPO - o que este teste podia e nao podia enxergar\n")
+    print("  A confirmacao e' POR JANELA, entao a potencia tambem e' por janela -")
+    print("  somar o N das janelas superestimaria o que o teste enxerga.\n")
+    for rot, bloco, janelas in escopo:
+        print(f"  {rot}: {janelas} janela(s) de {bloco} candles de validacao")
+        for descricao, fracao in (("dispara em todo candle", 1.0),
+                                  ("dispara em 20% dos candles", 0.20),
+                                  ("dispara em 5% dos candles", 0.05)):
+            n = int(bloco * fracao)
+            if n < 30:
+                print(f"      {descricao:<28} n={n:<6} amostra pequena demais")
+                continue
+            detectavel = empate + margem(0.55, n)
+            aviso = "  <- SUBPOTENTE" if detectavel > 0.60 else ""
+            print(f"      {descricao:<28} n={n:<6} so detecta acima de "
+                  f"{detectavel:.1%}{aviso}")
+        print()
+
+    por_prazo = achados[0]["janelas"] if achados else 0
+    print(f"\n  Medido: {args.par}, {args.candles} candles por prazo, "
+          f"alvo = corpo do candle seguinte,")
+    print(f"  custo = apenas o payout de {args.payout:.0%} (sem spread nem "
+          f"slippage),")
+    print(f"  {por_prazo} janela(s) por prazo em {len(achados)} prazo(s).")
+    perda = abs(0.5 * args.payout - 0.5) * 100
+    print(f"\n  Com payout de {args.payout:.0%}, acertar 50% custa {perda:.1f}% "
+          f"por aposta.")
+    print("\n  'Nao confirmou' aqui significa 'nao confirmou NESTA amostra' -")
+    print("  nao e' prova de que a vantagem nao existe. Amostra maior e mais")
+    print("  pares e' o proximo passo, nao uma conclusao diferente.")
+    print("=" * 80 + "\n")
 
 
 def main():
@@ -235,8 +286,9 @@ def main():
     p.add_argument("--par", default="BTCUSDT")
     p.add_argument("--payout", type=float, default=0.83)
     p.add_argument("--candles", type=int, default=5000)
-    p.add_argument("--autoteste", action="store_true",
-                   help="prova que a ferramenta acha sinal real e rejeita ruido")
+    p.add_argument("--janelas", type=int, default=1,
+                   help="numero de janelas de walk-forward (1 = split unico)")
+    p.add_argument("--autoteste", action="store_true")
     args = p.parse_args()
 
     empate = 1 / (1 + args.payout)
@@ -245,10 +297,9 @@ def main():
         return autoteste(empate)
 
     print(f"\nPar: {args.par}   |   Payout: {args.payout:.0%}   |   "
-          f"linha do empate: {empate:.1%}")
+          f"empate em {empate:.1%}   |   {args.janelas} janela(s)")
 
-    confirmados = []
-    analisados = 0
+    achados, escopo, analisados = [], [], 0
     for intervalo in ("1m", "5m", "15m"):
         try:
             df = baixar(args.par, intervalo, args.candles)
@@ -256,85 +307,84 @@ def main():
             print(f"\n[{intervalo}] erro ao baixar: {e}")
             continue
         analisados += 1
-        confirmados += pesquisar(df, f"{args.par} {intervalo}", empate)
+        r = pesquisar(df, f"{args.par} {intervalo}", empate, args.janelas)
+        achados.append(r)
+        escopo.append((f"{args.par} {intervalo}", r["bloco"], r["janelas"]))
 
-    print(f"\n{'='*78}")
-
-    # Sem dado nenhum nao existe conclusao. Nao confunda "baixou e nao achou"
-    # com "nao conseguiu baixar" - a segunda nao mede nada.
     if analisados == 0:
-        print("NADA FOI MEDIDO - nenhum candle foi baixado.")
+        print(f"\n{'='*80}\nNADA FOI MEDIDO - nenhum candle foi baixado.")
         print("\nOs erros acima sao de conexao, nao resultado de analise.")
         print("Causas comuns: sem internet, firewall/proxy, VPN, ou a Binance")
         print("bloqueada na sua rede. Resolva o acesso e rode de novo.")
         print("\nNAO conclua nada sobre os sinais a partir desta execucao.")
-        print("=" * 78 + "\n")
+        print("=" * 80 + "\n")
         return 1
-    if confirmados:
-        print("SINAIS QUE SOBREVIVERAM A TUDO:\n")
-        for nome, taxa, m, n, paga in confirmados:
-            veredito = ("cobre o payout" if paga
-                        else "REAL, mas fraco demais para a binaria")
-            print(f"  {nome}: {taxa:.1%} ±{m:.1%} em {n} operacoes  -> {veredito}")
-        if not any(c[4] for c in confirmados):
-            print("\n  Atencao: existe sinal, mas nenhum forte o bastante para")
-            print("  vencer o payout. Em binaria, isso ainda perde dinheiro.")
-        print("\nAntes de arriscar dinheiro: repita em outros pares (ETH, SOL)")
-        print("e em outro periodo. Vantagem real sobrevive; sorte, nao.")
-    else:
-        print("NENHUM sinal sobreviveu as duas travas.")
-        print("\nIsso nao e' falha da busca - foram dezenas de candidatos, em tres")
-        print("prazos. E' o resultado: nesses dados, os sinais tecnicos classicos")
-        print(f"nao preveem a direcao do proximo candle melhor que cara-ou-coroa.")
-        print(f"Com payout de {args.payout:.0%}, apostar neles perde "
-              f"{(0.5*args.payout - 0.5)*100:.1f}% por operacao, em media.")
-    print("=" * 78 + "\n")
+
+    relatorio(achados, empate, args, escopo)
 
 
 def autoteste(empate: float):
     """
-    Prova que a ferramenta nao esta viciada em dizer "nao".
-
-    Roda a mesma busca em duas series inventadas:
-      A) ruido puro          -> ela DEVE nao achar nada
-      B) com vantagem real plantada -> ela DEVE achar
+    Tres bracos, porque dois nao bastavam:
+      A) ruido puro, VARIAS sementes -> mede quanto o BH realmente corta
+      B) vantagem plantada           -> a busca precisa achar
+      C) ruido puro, janela unica    -> nao pode achar nada
     """
-    rng = np.random.default_rng(2024)
-
-    def serie(n=6000, plantar=False):
-        preco, abre, fecha, alta, baixa = 60000.0, [], [], [], []
-        hist = []
+    def serie(semente, plantar=False, n=6000):
+        rng = np.random.default_rng(semente)
+        preco, abre, fecha, alta, baixa, hist = 60000.0, [], [], [], [], []
         for _ in range(n):
             r = rng.normal(0, 0.0015)
-            if plantar and len(hist) >= 14:
-                # vantagem plantada: apos 3 quedas seguidas, 60% de chance de subir
-                if all(h < 0 for h in hist[-3:]):
-                    r = abs(rng.normal(0, 0.0015)) if rng.random() < 0.60 else r
+            if plantar and len(hist) >= 3 and all(h < 0 for h in hist[-3:]):
+                if rng.random() < 0.62:
+                    r = abs(rng.normal(0, 0.0015))
             o = preco
-            preco = preco * (1 + r)
+            preco *= (1 + r)
             abre.append(o); fecha.append(preco)
             alta.append(max(o, preco) * 1.0004); baixa.append(min(o, preco) * 0.9996)
             hist.append(r)
         return pd.DataFrame({
-            "data": pd.date_range("2026-01-01", periods=n, freq="1min", tz="UTC"),
             "open": abre, "close": fecha, "high": alta, "low": baixa,
             "volume": np.abs(rng.normal(100, 25, n))})
 
     print("\nAUTOTESTE - a ferramenta e' confiavel?\n")
 
-    achou_ruido = pesquisar(serie(plantar=False),
-                            "A) RUIDO PURO (o certo e' NAO achar nada)", empate)
-    achou_real = pesquisar(serie(plantar=True),
-                           "B) COM VANTAGEM PLANTADA (o certo e' ACHAR)", empate)
+    # --- A) o BH corta mesmo? Uma semente so nao responde isso.
+    print("=" * 80)
+    print("A) RUIDO PURO em 15 sementes - o BH esta fazendo trabalho?\n")
+    brutos, corrigidos = [], []
+    for semente in range(15):
+        df = serie(semente)
+        alvo = (df["close"].shift(-1) > df["open"].shift(-1)).astype(object)
+        alvo.iloc[-1] = np.nan
+        b, c, _, _ = uma_janela(gerar_sinais(df), alvo, 0, 4200, 6000, empate, 0.05)
+        brutos.append(b); corrigidos.append(c)
+    b, c = np.array(brutos), np.array(corrigidos)
+    print(f"  falsos positivos SEM correcao: media {b.mean():.1f}  max {b.max()}")
+    print(f"  falsos positivos COM correcao: media {c.mean():.1f}  max {c.max()}")
+    print(f"  sementes com algo para o BH cortar: {(b > 0).sum()}/15")
+    ok_bh = (b.max() > 0) and (c.max() == 0)
+    print(f"  -> {'OK: o BH corta o que aparece' if ok_bh else 'FALHOU'}")
 
-    print(f"\n{'='*78}")
-    ok_a, ok_b = not achou_ruido, bool(achou_real)
-    print(f"  A) ruido puro          -> achou {len(achou_ruido)} sinais   "
-          f"{'OK (correto)' if ok_a else 'FALHOU: falso positivo'}")
-    print(f"  B) vantagem plantada   -> achou {len(achou_real)} sinais   "
-          f"{'OK (correto)' if ok_b else 'FALHOU: nao viu o que existia'}")
-    print(f"\n  {'Ferramenta confiavel.' if ok_a and ok_b else 'Ferramenta com problema.'}")
-    print("=" * 78 + "\n")
+    # --- B) acha vantagem real?
+    dfb = serie(99, plantar=True)
+    rb = pesquisar(dfb, "B) COM VANTAGEM PLANTADA (o certo e' ACHAR)", empate, janelas=1)
+    ok_b = bool(rb["placar"])
+
+    # --- C) inventa vantagem em ruido?
+    dfc = serie(7)
+    rc = pesquisar(dfc, "C) RUIDO PURO (o certo e' NAO achar nada)", empate, janelas=1)
+    ok_c = not rc["placar"]
+
+    print(f"\n{'='*80}")
+    print(f"  A) BH corta falso positivo      {'OK' if ok_bh else 'FALHOU'}")
+    print(f"  B) acha vantagem real           "
+          f"{'OK' if ok_b else 'FALHOU: nao viu o que existia'}")
+    print(f"  C) nao inventa em ruido         "
+          f"{'OK' if ok_c else 'FALHOU: falso positivo'}")
+    print(f"\n  {'Ferramenta confiavel.' if (ok_bh and ok_b and ok_c) else 'PROBLEMA - nao confie na saida.'}")
+    print("=" * 80 + "\n")
+    return 0 if (ok_bh and ok_b and ok_c) else 1
 
 
 if __name__ == "__main__":

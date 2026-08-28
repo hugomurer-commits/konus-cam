@@ -68,69 +68,89 @@ você.
 
 # Busca ampla de sinais — `busca_de_sinais.py`
 
-O `testar_previsao.py` testa 8 sinais fixos. Este aqui testa **68 variações**
-de uma vez (RSI em 3 períodos × 4 limiares, 5 pares de médias, 2 MACDs,
-momentum e reversão de 1 a 4 candles, 9 configurações de Bollinger, filtros de
-volume) — e é honesto sobre o que isso significa.
+Testa **55 variações** de sinais técnicos de uma vez (RSI em 3 períodos × 4
+limiares, 5 pares de médias, 2 MACDs, momentum de 1 a 4 candles, 9 Bollinger,
+filtros de volume) — e é honesto sobre o que isso significa.
 
 ## O problema de "testar até achar algo"
 
-Se você testa 68 sinais e fica com o melhor, **sempre** vai achar um vencedor —
-mesmo em dados 100% aleatórios. A 5% de significância, ~3 dos 68 vão passar por
-puro acaso. Escolher o melhor de muitos não é pesquisa, é loteria com uma etapa
-a mais.
+Testando dezenas de sinais e ficando com o melhor, você **sempre** acha um
+vencedor — mesmo em dados 100% aleatórios. Medido aqui, em 20 séries de ruído
+puro: uma média de **3,1 falsos positivos** por série sem correção, chegando a
+**12** na pior. Com a correção: **0 em 20**.
 
-## As duas travas
+## As quatro travas
 
-**1. Correção para testes múltiplos (Benjamini-Hochberg).** Desconta
-matematicamente a vantagem de ter testado muita coisa. Um sinal que passaria
-sozinho pode não passar quando estava entre 68.
+**1. Correção para testes múltiplos (Benjamini-Hochberg).** Desconta a
+vantagem de ter testado muita coisa.
 
-**2. Validação fora da amostra.** Os dados são cortados em 70% / 30%. A busca
-roda só nos primeiros 70%. Quem sobrevive é testado de novo nos 30% finais, que
-nunca foram vistos. Sorte não se repete em dados novos; vantagem real, sim.
+**2. Validação fora da amostra.** Descobre numa parte dos dados, confirma
+noutra que o sinal nunca viu.
+
+**3. Walk-forward (`--janelas N`).** Repete descoberta e validação em N
+janelas sequenciais. Vantagem real reaparece em várias; ajuste a um regime
+específico aparece em uma só e some nas outras. Sem isso, não dá para separar
+"o sinal morreu porque era ruído" de "morreu porque o regime mudou".
+
+**4. Relatório de potência.** Quando a amostra é pequena demais para separar
+"sem vantagem" de "vantagem lucrativa", ele diz isso — em vez de concluir.
+
+## Direção: o teste é bilateral, a aposta não
+
+O teste estatístico é bilateral: um sinal que acerta 43% é um achado tão bom
+quanto seu inverso a 57% — é a mesma informação. A **descoberta define a
+direção** e a validação testa a aposta já orientada, marcada como
+`[INVERTIDO]` no relatório.
+
+Por isso o catálogo não traz inversos explícitos: "Reversão" é o complemento
+exato de "Momentum", e "Bollinger rompe" o de "Bollinger toque". Incluir os
+dois testa a mesma hipótese duas vezes, inflando o número de testes e deixando
+o BH conservador à toa, sem acrescentar informação.
 
 ## Duas perguntas, duas respostas
 
-O relatório separa o que quase todo curso mistura:
-
-| Coluna | Pergunta |
+| Marca | Significa |
 |---|---|
-| `real?` | O sinal prevê alguma coisa? (acima de 50% com folga estatística) |
-| `paga?` | A vantagem cobre o payout da binária? (acima de 54,6% com 83%) |
+| `REAL` | O sinal prevê algo — acima de 50% com folga estatística |
+| `REAL+PAGA` | A vantagem também cobre o payout (54,6% com payout de 83%) |
 
-Um sinal pode ser **real e mesmo assim perder dinheiro** — é o caso mais comum.
-A vantagem existe, mas é menor que a mordida da corretora.
+Um sinal pode ser **real e mesmo assim perder dinheiro**: a vantagem existe,
+mas é menor que a mordida da corretora. É o caso mais comum.
 
 ## Como rodar
 
 ```bash
-python3 busca_de_sinais.py                          # BTCUSDT, payout 83%
-python3 busca_de_sinais.py --par ETHUSDT
-python3 busca_de_sinais.py --payout 0.90 --candles 8000
+python3 busca_de_sinais.py                                  # BTCUSDT, janela única
+python3 busca_de_sinais.py --par ETHUSDT --janelas 4 --candles 20000
+python3 busca_de_sinais.py --payout 0.90
 ```
+
+Para uma conclusão que valha alguma coisa, use `--janelas 4` ou mais e o
+máximo de candles que a Binance devolver. Janela única em poucos dias de dados
+é subpotente — o próprio relatório vai avisar.
 
 ## Autoteste — a ferramenta é confiável?
 
 Uma ferramenta que sempre responde "não achei nada" seria inútil e você não
-teria como saber. Por isso ela testa a si mesma:
+teria como saber. Ela testa a si mesma em três braços:
 
 ```bash
 python3 busca_de_sinais.py --autoteste
 ```
 
-Ela roda a busca completa em duas séries inventadas: uma de **ruído puro**
-(onde o certo é não achar nada) e uma com uma **vantagem real plantada** (onde
-o certo é achar). Só se comporta como confiável se acertar as duas.
+| Braço | O que faz | O certo é |
+|---|---|---|
+| A | Ruído puro em 15 sementes | O BH ter o que cortar, e cortar tudo |
+| B | Série com vantagem real plantada | Achar |
+| C | Ruído puro, janela única | Não achar nada |
 
-Resultado da última execução:
+O braço A existe porque uma semente só não prova nada sobre a correção: se
+aquele sorteio não produzir falso positivo, o BH nunca é exercitado e o
+autoteste passa sem ter testado a trava.
 
-```
-A) ruído puro          -> achou 0 sinais   OK (correto)
-B) vantagem plantada   -> achou 2 sinais   OK (correto)
-Ferramenta confiável.
-```
+Sai com código 1 se qualquer braço falhar.
 
-O teste B ainda revela o ponto central: mesmo com vantagem **real** plantada
-nos dados, os sinais encontrados marcaram `real? SIM` e `paga? não`. Havia
-previsão de verdade e ainda assim se perderia dinheiro na binária.
+## Sem dados não há conclusão
+
+Se todos os downloads falharem, os dois scripts imprimem `NADA FOI MEDIDO` e
+saem com código 1. Erro de conexão nunca vira "medimos e não achamos nada".
