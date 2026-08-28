@@ -192,7 +192,7 @@ def main():
         print(f"Todos ficaram perto de 50% - cara-ou-coroa. Com payout de "
               f"{args.payout:.0%},")
         print(f"acertar 50% significa perder "
-              f"{(0.5*args.payout - 0.5)*100:.1f}% de cada aposta, em media.")
+              f"{abs(0.5*args.payout - 0.5)*100:.1f}% de cada aposta, em media.")
     print("=" * 74 + "\n")
 
 
