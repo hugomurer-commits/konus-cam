@@ -248,15 +248,28 @@ def main():
           f"linha do empate: {empate:.1%}")
 
     confirmados = []
+    analisados = 0
     for intervalo in ("1m", "5m", "15m"):
         try:
             df = baixar(args.par, intervalo, args.candles)
         except Exception as e:
             print(f"\n[{intervalo}] erro ao baixar: {e}")
             continue
+        analisados += 1
         confirmados += pesquisar(df, f"{args.par} {intervalo}", empate)
 
     print(f"\n{'='*78}")
+
+    # Sem dado nenhum nao existe conclusao. Nao confunda "baixou e nao achou"
+    # com "nao conseguiu baixar" - a segunda nao mede nada.
+    if analisados == 0:
+        print("NADA FOI MEDIDO - nenhum candle foi baixado.")
+        print("\nOs erros acima sao de conexao, nao resultado de analise.")
+        print("Causas comuns: sem internet, firewall/proxy, VPN, ou a Binance")
+        print("bloqueada na sua rede. Resolva o acesso e rode de novo.")
+        print("\nNAO conclua nada sobre os sinais a partir desta execucao.")
+        print("=" * 78 + "\n")
+        return 1
     if confirmados:
         print("SINAIS QUE SOBREVIVERAM A TUDO:\n")
         for nome, taxa, m, n, paga in confirmados:
