@@ -25,7 +25,7 @@
 <body>
 <main>
   <h1>Vídeo do Instagram para a TV</h1>
-  <p>Coloque o Reels (vertical). Ele aparece 3 vezes lado a lado em 1920x1080 e você baixa o arquivo pronto para a TV.</p>
+  <p>Coloque o Reels (vertical). Ele aparece 3 vezes lado a lado em 1920x1080 e você baixa o arquivo pronto para a TV (sem áudio).</p>
 
   <label id="drop">Clique ou arraste o vídeo aqui
     <input id="file" type="file" accept="video/*" hidden>
@@ -51,7 +51,7 @@
   var $ = function(id){ return document.getElementById(id); };
   var video = $('src'), canvas = $('tela'), ctx = canvas.getContext('2d');
   var W = canvas.width, H = canvas.height, PW = W / 3;
-  var nome = 'video', audio = null;
+  var nome = 'video';
 
   // Mesmo enquadramento do video_tv.py: cada copia ocupa 640x1080.
   function desenhar(){
@@ -89,8 +89,8 @@
 
   // MP4 (H.264) e' o que a TV toca; Chrome/Edge recentes gravam direto nele.
   function formato(){
-    var tipos = ['video/mp4;codecs=avc1.640028,mp4a.40.2', 'video/mp4;codecs=avc1,mp4a.40.2',
-                 'video/webm;codecs=vp9,opus', 'video/webm'];
+    var tipos = ['video/mp4;codecs=avc1.640028', 'video/mp4;codecs=avc1',
+                 'video/webm;codecs=vp9', 'video/webm'];
     for (var i = 0; i < tipos.length; i++) if (MediaRecorder.isTypeSupported(tipos[i])) return tipos[i];
     return '';
   }
@@ -98,11 +98,7 @@
   $('gerar').onclick = function(){
     var mime = formato(), ext = mime.indexOf('mp4') >= 0 ? 'mp4' : 'webm';
     var saida = canvas.captureStream(30);
-    // audio do original, uma vez so
-    if (!audio){ var ac = new AudioContext(); audio = { ac: ac, fonte: ac.createMediaElementSource(video) }; }
-    var dest = audio.ac.createMediaStreamDestination();
-    audio.fonte.connect(dest);
-    dest.stream.getAudioTracks().forEach(function(t){ saida.addTrack(t); });
+    // sem audio: so a imagem vai para a TV
 
     var partes = [], rec = new MediaRecorder(saida, { mimeType: mime, videoBitsPerSecond: 12e6 });
     rec.ondataavailable = function(e){ if (e.data.size) partes.push(e.data); };
@@ -114,13 +110,12 @@
       $('status').textContent = 'Pronto: ' + a.download + (ext === 'webm'
         ? ' (seu navegador não grava MP4 — use o Chrome atualizado para a TV aceitar)' : '');
       $('gerar').disabled = false; $('prog').hidden = true;
-      audio.fonte.disconnect();
-      video.loop = true; video.muted = true; video.play();
+      video.loop = true; video.play();
     };
 
     $('gerar').disabled = true; $('prog').hidden = false;
     $('status').textContent = 'Gravando (leva o tempo do vídeo)...';
-    video.loop = false; video.muted = false; video.currentTime = 0;
+    video.loop = false; video.currentTime = 0;
     video.ontimeupdate = function(){ $('prog').value = video.currentTime / (video.duration || 1); };
     video.onended = function(){ if (rec.state === 'recording') rec.stop(); };
     video.play().then(function(){ rec.start(1000); });

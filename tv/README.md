@@ -12,8 +12,8 @@ aparece **3 vezes lado a lado**, preenchendo a tela em 1920x1080:
 Cada cópia ocupa 640x1080. No modo **preencher** (padrão) não sobra faixa
 preta: o vídeo é cortado ~5% em cima e embaixo (29px de cada lado). Se
 tiver texto ou logo colado na borda, use o modo **inteiro**: nada é cortado
-e aparecem faixas pretas finas nas laterais de cada cópia. O áudio sai uma
-vez só.
+e aparecem faixas pretas finas nas laterais de cada cópia. O arquivo sai
+sem áudio, só a imagem.
 
 ## Opção 1 — navegador, sem instalar nada
 
@@ -36,7 +36,7 @@ python video_tv.py https://www.instagram.com/reel/XXXXXXXX/
 ```
 
 Ele usa o login do Instagram que já está no Chrome para baixar e gera
-`video_tv.mp4` (H.264 + AAC, toca em qualquer TV, pendrive ou TV box).
+`video_tv.mp4` (H.264, sem áudio, toca em qualquer TV, pendrive ou TV box).
 **No Windows, feche o Chrome antes**: com ele aberto os cookies ficam
 travados. Se mesmo assim não baixar, baixe pelo app e passe o arquivo:
 

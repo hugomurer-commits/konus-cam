@@ -15,7 +15,7 @@ com 1138 de altura, entao sobra um corte de ~5% (29px em cima e embaixo),
 imperceptivel. Com --modo inteiro nada e' cortado e aparecem faixas pretas
 finas nas laterais de cada copia.
 
-O audio e' o do video original (uma vez so, nao triplicado).
+O arquivo final sai sem audio (so imagem), como vai para a TV da loja.
 
 Uso:
     pip install yt-dlp imageio-ffmpeg
@@ -106,10 +106,9 @@ def montar(ffmpeg, entrada, saida, largura, altura, modo):
         ffmpeg, "-y", "-hide_banner", "-loglevel", "error", "-stats",
         "-i", entrada,
         "-filter_complex", filtro,
-        "-map", "[v]", "-map", "0:a?",
-        # H.264 High + AAC em MP4: o que qualquer TV/pendrive/TV box toca
+        "-map", "[v]", "-an",
+        # H.264 High em MP4: o que qualquer TV/pendrive/TV box toca
         "-c:v", "libx264", "-profile:v", "high", "-preset", "medium", "-crf", "18",
-        "-c:a", "aac", "-b:a", "192k",
         "-movflags", "+faststart",
         saida,
     ]
