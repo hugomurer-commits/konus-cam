@@ -108,7 +108,7 @@ def montar(ffmpeg, entrada, saida, largura, altura, modo):
         "-filter_complex", filtro,
         "-map", "[v]", "-an",
         # H.264 High em MP4: o que qualquer TV/pendrive/TV box toca
-        "-c:v", "libx264", "-profile:v", "high", "-preset", "medium", "-crf", "18",
+        "-c:v", "libx264", "-profile:v", "high", "-preset", "slow", "-crf", "20",
         "-movflags", "+faststart",
         saida,
     ]
