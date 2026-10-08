@@ -127,6 +127,9 @@
   .area-quartos .mapa-dica { align-items: flex-start; }
   .area-quartos .mapa-rolagem { max-height: calc(100vh - 170px); }
   .area-quartos .form-quarto .linha-campos { grid-template-columns: minmax(0, 1fr); }
+  .area-quartos .contador-pessoas { flex-wrap: nowrap; gap: 8px; }
+  .area-quartos .contador-pessoas .botao { padding-left: 12px; padding-right: 12px; gap: 6px; }
+  .area-quartos .contador-pessoas .valor { min-width: 0; flex: 1 1 auto; }
   .area-quartos .lista-quartos .acoes-quarto { flex-wrap: nowrap; gap: 6px; }
   .area-quartos .lista-quartos .acoes-quarto .botao { flex: 1 1 0; min-width: 0; padding-left: 6px; padding-right: 6px; gap: 6px; }
   .area-quartos .lista-clientes > li { grid-template-columns: auto minmax(0, 1fr); }

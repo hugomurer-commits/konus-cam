@@ -40,8 +40,8 @@
   display: inline-flex; align-items: center; flex-wrap: wrap; gap: 10px;
   padding: 6px 6px 6px 10px; border: 2px dashed var(--limpar-borda); border-radius: 16px; background: var(--branco);
 }
-.ocupados { display: flex; align-items: center; gap: 8px; margin: 12px 0 0; }
-.ocupados svg { width: 18px; height: 18px; }
+.passo .ocupados { display: flex; align-items: center; gap: 8px; margin: 12px 0 0; }
+.passo .ocupados svg { width: 18px; height: 18px; }
 
 /* Diária e total */
 .conta-diaria { margin-top: 16px; padding: 14px 18px; border-radius: var(--raio-g); background: var(--azul-espuma); border: 1px solid var(--ocupado-fundo); }
@@ -59,11 +59,8 @@
 /* ----- Janela "Recebi" ----- */
 .quem-paga { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 14px; margin: 4px 0 16px; font-size: var(--fs-medio); }
 .texto-janela { font-size: var(--fs-medio); margin: 14px 0 0; }
-/* Rodapé das janelas de formulário igual ao da confirmação (faixa creme com linha em cima) */
-.corpo-janela > .botoes.rodape-janela {
-  margin: 20px -28px 0; padding: 20px 28px calc(24px + env(safe-area-inset-bottom));
-  border-top: 1px solid var(--linha); background: #fffcf6;
-}
+.texto-janela + .botoes { margin-top: 12px; }
+.nota-janela { margin: 12px 0 0; }
 
 /* ----- Detalhe da estadia ----- */
 .tela-estadia .titulo-tela > div:first-child { min-width: 0; }

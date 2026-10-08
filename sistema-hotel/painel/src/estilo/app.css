@@ -492,11 +492,11 @@ svg { flex-shrink: 0; }
 .mapa-linha {
   --col-quarto: 92px; --col-dia: 108px;
   display: grid; grid-template-columns: var(--col-quarto) repeat(var(--dias), minmax(var(--col-dia), 1fr));
-  grid-template-rows: repeat(var(--faixas, 1), minmax(60px, auto));
+  grid-template-rows: repeat(var(--faixas, 1), minmax(64px, auto));
   row-gap: 4px; min-width: calc(var(--col-quarto) + var(--dias) * var(--col-dia));
   border-bottom: 1px solid var(--linha);
 }
-.mapa-linha.cabecalho-mapa { position: sticky; top: 0; z-index: 4; grid-template-rows: auto; background: rgba(255, 255, 255, 0.97); border-bottom: 2px solid var(--linha); }
+.mapa-linha.cabecalho-mapa { position: sticky; top: 0; z-index: 4; grid-template-rows: auto; background: #fff; border-bottom: 2px solid var(--linha); }
 .mapa-cab { padding: 8px 4px; text-align: center; line-height: 1.2; }
 .mapa-cab .dsem { display: block; font-size: var(--fs-min); color: var(--tinta-suave); }
 .mapa-cab .dia { font-weight: 700; }
@@ -553,7 +553,9 @@ svg { flex-shrink: 0; }
 .janela-topo .chip-icone svg { width: 30px; height: 30px; }
 .janela-topo h2 { margin: 0; }
 .janela .mensagem { padding: 4px 28px 0; font-size: var(--fs-medio); line-height: 1.5; }
-.janela .corpo-janela { padding: 4px 28px 0; }
+.janela .corpo-janela { padding: 4px 28px 24px; }
+/* Botões no fim do formulário viram o mesmo rodapé creme da confirmação */
+.janela .corpo-janela > .botoes:last-child { margin: 20px -28px -24px; padding: 20px 28px 24px; border-top: 1px solid var(--linha); background: #fffcf6; justify-content: flex-end; }
 .recibo { margin: 16px 28px 0; padding: 16px 20px; border-radius: 18px; background: var(--verde-broto); border: 2px dashed var(--verde-coqueiro); display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .recibo .valor { font-size: var(--fs-dinheiro); font-weight: 700; color: var(--verde-escuro); font-variant-numeric: tabular-nums; }
 .recibo .forma { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; color: var(--tinta); }
@@ -564,7 +566,7 @@ svg { flex-shrink: 0; }
 @media (max-width: 599px) {
   .fundo-janela { align-items: flex-end; padding: 0; }
   .janela { border-radius: 24px 24px 0 0; max-height: 92vh; }
-  .janela > .botoes, .corpo-janela > .botoes:last-child { flex-direction: column-reverse; align-items: stretch; padding-bottom: calc(20px + env(safe-area-inset-bottom)); }
+  .janela > .botoes, .janela .corpo-janela > .botoes:last-child { flex-direction: column-reverse; align-items: stretch; padding-bottom: calc(20px + env(safe-area-inset-bottom)); }
   .janela > .botoes .botao, .corpo-janela > .botoes:last-child .botao { width: 100%; }
 }
 
@@ -627,8 +629,6 @@ svg { flex-shrink: 0; }
 .carregando { display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 18px; min-height: 60vh; }
 .carregando img { width: 180px; animation: respirar 1.6s ease-in-out infinite alternate; }
 @keyframes respirar { from { opacity: 0.55; transform: scale(0.97); } }
-.corpo-janela { padding: 4px 28px 24px; }
-.corpo-janela > .botoes:last-child { margin-top: 18px; justify-content: flex-end; }
 .janela .mensagem + .botoes, .janela .recibo + .botoes { margin-top: 20px; }
 .secao-titulo { display: flex; align-items: center; gap: 12px; margin: 0 0 12px; }
 .secao-titulo .chip-icone { width: 40px; height: 40px; border-radius: 12px; }
@@ -640,3 +640,17 @@ svg { flex-shrink: 0; }
 /* Subtítulo alinhado com o texto do título (depois do ícone) */
 .titulo-tela h1:has(> .chip-icone) + .subtitulo { margin: 4px 0 0 62px; }
 @media (max-width: 599px) { .titulo-tela h1:has(> .chip-icone) + .subtitulo { margin-left: 0; } }
+@media (max-width: 899px) {
+  /* Número do passo ao lado do título do passo */
+  .cartao.passo > .passo-numero { float: left; margin: 0 12px 0 0; }
+  .cartao.passo > .passo-numero + .rotulo { display: flex; align-items: center; min-height: 44px; margin-top: 0; }
+}
+@media (max-width: 599px) {
+  .titulo-tela h1 { font-size: var(--fs-h2); gap: 12px; }
+  .titulo-tela h1 .chip-icone { width: 44px; height: 44px; }
+  .janela-topo { padding: 20px 20px 8px; }
+  .janela .mensagem, .janela .corpo-janela { padding-left: 20px; padding-right: 20px; }
+  .janela .corpo-janela > .botoes:last-child { margin-left: -20px; margin-right: -20px; padding-left: 20px; padding-right: 20px; }
+  .recibo { margin-left: 20px; margin-right: 20px; }
+  .janela > .botoes { padding-left: 20px; padding-right: 20px; }
+}

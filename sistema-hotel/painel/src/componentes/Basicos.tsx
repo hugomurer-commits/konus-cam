@@ -4,6 +4,7 @@ import {
   CalendarClock,
   Check,
   CircleAlert,
+  CircleMinus,
   DoorOpen,
   LogIn,
   LogOut,
@@ -37,7 +38,7 @@ export const ICONE_ESTADO: Record<Estado, LucideIcon | null> = {
   sai: LogOut,
   limpar: SprayCan,
   atrasado: TriangleAlert,
-  neutro: null,
+  neutro: CircleMinus,
   pago: Check,
 };
 

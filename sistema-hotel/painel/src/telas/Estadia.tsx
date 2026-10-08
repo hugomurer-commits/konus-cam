@@ -528,7 +528,7 @@ function JanelaTrocar({ d, aoFechar }: { d: DetalheEstadia; aoFechar: () => void
         ))}
         {disp.data && livres.length === 0 && <p className="erro-form">Nenhum outro quarto livre nessas datas.</p>}
       </div>
-      {e.status === 'hospedado' && <p className="suave pequeno">O quarto atual fica marcado para limpar.</p>}
+      {e.status === 'hospedado' && <p className="suave pequeno nota-janela">O quarto atual fica marcado para limpar.</p>}
       <MensagemErro erro={erro} />
       <div className="botoes direita rodape-janela">
         <button className="botao grande" onClick={aoFechar}>
