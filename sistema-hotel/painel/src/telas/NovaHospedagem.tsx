@@ -407,20 +407,22 @@ export function NovaHospedagem() {
         <div className="campo">
           <span className="rotulo">Quantas noites</span>
           <div className="botoes">
-            <Escolha
-              rotulo="Quantas noites"
-              valor={outraQtd ? 0 : qtdNoites}
-              aoEscolher={(n) => {
-                setOutraQtd(n === 0);
-                if (n) setQtdNoites(n);
-              }}
-              opcoes={[
-                { valor: 1, texto: '1 noite' },
-                { valor: 2, texto: '2 noites' },
-                { valor: 3, texto: '3 noites' },
-                { valor: 0, texto: 'Outra' },
-              ]}
-            />
+            <div className="escolha-grade">
+              <Escolha
+                rotulo="Quantas noites"
+                valor={outraQtd ? 0 : qtdNoites}
+                aoEscolher={(n) => {
+                  setOutraQtd(n === 0);
+                  if (n) setQtdNoites(n);
+                }}
+                opcoes={[
+                  { valor: 1, texto: '1 noite' },
+                  { valor: 2, texto: '2 noites' },
+                  { valor: 3, texto: '3 noites' },
+                  { valor: 0, texto: 'Outra' },
+                ]}
+              />
+            </div>
             {outraQtd && (
               <input
                 type="number"
@@ -454,25 +456,27 @@ export function NovaHospedagem() {
       >
         {disp.isLoading && <p className="suave">Vendo os quartos…</p>}
         {quartosProntos.length > 0 && (
-          <Escolha
-            rotulo="Quarto"
-            valor={quartoId}
-            aoEscolher={(id) => {
-              const q = quartosProntos.find((x) => x.id === id);
-              setQuartoId(id);
-              if (q && pessoas > q.capacidade) setPessoas(q.capacidade);
-            }}
-            opcoes={quartosProntos.map((q) => ({
-              valor: q.id,
-              icone: BedDouble,
-              texto: (
-                <>
-                  {q.codigo}
-                  <span className="capacidade">até {q.capacidade}</span>
-                </>
-              ),
-            }))}
-          />
+          <div className="escolha-grade quartos">
+            <Escolha
+              rotulo="Quarto"
+              valor={quartoId}
+              aoEscolher={(id) => {
+                const q = quartosProntos.find((x) => x.id === id);
+                setQuartoId(id);
+                if (q && pessoas > q.capacidade) setPessoas(q.capacidade);
+              }}
+              opcoes={quartosProntos.map((q) => ({
+                valor: q.id,
+                icone: BedDouble,
+                texto: (
+                  <>
+                    {q.codigo}
+                    <span className="capacidade">até {q.capacidade}</span>
+                  </>
+                ),
+              }))}
+            />
+          </div>
         )}
         {quartosParaLimpar.length > 0 && (
           <div className="botoes para-limpar">
@@ -498,18 +502,20 @@ export function NovaHospedagem() {
       </Passo>
 
       <Passo numero={4} rotulo="Pessoas e diária" feito={feito4}>
-        <Escolha
-          rotulo="Número de pessoas"
-          valor={pessoas}
-          aoEscolher={(n) => {
-            setPessoas(n);
-            setValorEditado(null);
-          }}
-          opcoes={Array.from({ length: Math.max(quarto?.capacidade ?? 5, 1) }, (_, i) => ({
-            valor: i + 1,
-            texto: i === 0 ? '1 pessoa' : `${i + 1}`,
-          }))}
-        />
+        <div className="escolha-grade">
+          <Escolha
+            rotulo="Número de pessoas"
+            valor={pessoas}
+            aoEscolher={(n) => {
+              setPessoas(n);
+              setValorEditado(null);
+            }}
+            opcoes={Array.from({ length: Math.max(quarto?.capacidade ?? 5, 1) }, (_, i) => ({
+              valor: i + 1,
+              texto: i === 0 ? '1 pessoa' : `${i + 1}`,
+            }))}
+          />
+        </div>
         <div className="conta-diaria">
           <div className="botoes">
             <span className="linha-diaria">

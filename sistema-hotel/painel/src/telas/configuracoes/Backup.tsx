@@ -68,7 +68,7 @@ export function ConfigBackup() {
   return (
     <>
       <section className={`cartao cartao-lista estado-backup ${d.atrasado || !d.ultimo ? 'tom-perigo' : 'tom-livre'}`}>
-        <header className="cartao-topo">
+        <header className="cartao-topo topo-quebra">
           <ChipIcone icone={d.atrasado || !d.ultimo ? ShieldAlert : ShieldCheck} tom={d.atrasado || !d.ultimo ? 'tom-perigo' : 'tom-livre'} />
           <h2>Último backup:</h2>
           {d.ultimo ? (

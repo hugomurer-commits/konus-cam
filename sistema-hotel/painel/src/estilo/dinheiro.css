@@ -173,8 +173,8 @@
 @media (min-width: 700px) {
   /* Colunas de valor e botões alinhadas de uma linha para outra */
   .tela-dinheiro .lista-contas .valor { min-width: 130px; }
-  .tela-dinheiro .lista-contas .acoes { min-width: 252px; justify-content: flex-start; }
-  .tela-dinheiro .lista-despesas .acoes { min-width: 236px; justify-content: flex-end; }
+  .tela-dinheiro .lista-contas .acoes { min-width: 270px; justify-content: flex-start; }
+  .tela-dinheiro .lista-despesas .acoes { min-width: 256px; justify-content: flex-end; }
   .tela-dinheiro .lista-vales .acoes, .tela-dinheiro .lista-vales .valor { min-width: 0; }
 }
 @media (max-width: 699px) {
@@ -191,4 +191,10 @@
   .tela-dinheiro .comparacao td.mudou { grid-column: 2; grid-row: 1; }
   .tela-dinheiro .comparacao td.numero { grid-column: 1 / -1; display: flex; justify-content: space-between; gap: 12px; }
   .tela-dinheiro .comparacao td.numero::before { content: attr(data-rotulo); color: var(--tinta-suave); }
+}
+.tela-dinheiro .tabela.contracheque tbody tr th, .tela-dinheiro .tabela.contracheque tbody tr td { background: transparent; }
+@media (max-width: 699px) {
+  /* Categorias: duas por linha quando cabem */
+  .tela-dinheiro .botoes.escolha .opcao { font-size: var(--fs-base); min-height: 52px; min-width: 0; padding: 8px 12px 8px 10px; gap: 8px; }
+  .tela-dinheiro .botoes.escolha .opcao .marca { width: 24px; height: 24px; }
 }

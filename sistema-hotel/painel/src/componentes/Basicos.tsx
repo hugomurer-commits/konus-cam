@@ -41,8 +41,17 @@ export const ICONE_ESTADO: Record<Estado, LucideIcon | null> = {
   pago: Check,
 };
 
-export function Etiqueta({ estado, children }: { estado: Estado; children: ReactNode }) {
-  const Icone = ICONE_ESTADO[estado];
+export function Etiqueta({
+  estado,
+  icone,
+  children,
+}: {
+  estado: Estado;
+  /** Troca o ícone padrão do estado (null = sem ícone) */
+  icone?: LucideIcon | null;
+  children: ReactNode;
+}) {
+  const Icone = icone === undefined ? ICONE_ESTADO[estado] : icone;
   return (
     <span className={`etiqueta est-${estado}`}>
       {Icone && <Icone aria-hidden="true" />}

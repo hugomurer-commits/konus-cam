@@ -55,7 +55,7 @@ function ListaHospedes({ hospedes }: { hospedes: Hospede[] }) {
   return (
     <ul className="lista lista-clientes">
       {hospedes.map((h) => {
-        const cidade = [h.cidade, h.uf].filter(Boolean).join('/');
+        const cidade = [nomeProprio(h.cidade), h.uf].filter(Boolean).join('/');
         return (
           <li key={h.id}>
             <span className="avatar" aria-hidden="true">
@@ -177,7 +177,7 @@ function FichaHospede() {
   if (dados.error) return <MensagemErro erro={dados.error} />;
   const { hospede: h, estadias } = dados.data!;
   const wa = linkWhatsapp(h.telefone);
-  const cidade = [h.cidade, h.uf].filter(Boolean).join('/');
+  const cidade = [nomeProprio(h.cidade), h.uf].filter(Boolean).join('/');
   const abrirEdicao = () => {
     setF({ nome: h.nome, telefone: h.telefone, cpfCnpj: h.cpf_cnpj ?? '', cidade: h.cidade, uf: h.uf, obs: h.obs });
     setEditando(true);

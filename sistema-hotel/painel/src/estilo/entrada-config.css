@@ -38,6 +38,8 @@
 }
 .apoio { color: var(--tinta-suave); margin: 0 0 16px; }
 .cartao-topo .etiqueta { flex-shrink: 0; }
+.topo-quebra { flex-wrap: wrap; row-gap: 8px; }
+.topo-quebra h2 { flex: 1 1 auto; min-width: 0; }
 .botoes-rodape { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 4px; }
 .botao-salvar-tudo { margin-bottom: 24px; }
 code.caminho {
@@ -56,6 +58,7 @@ code.caminho {
 .preco-quarto-topo { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; font-weight: 700; font-size: var(--fs-medio); }
 .preco-quarto-topo .chaveiro { width: 52px; min-height: 58px; padding-top: 22px; font-size: var(--fs-base); }
 .editor-tarifas .botoes { margin-bottom: 10px; }
+.editor-tarifas .linha-campos { grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
 
 /* ----- Linhas editáveis (Quem recebe, Categorias) ----- */
 .linhas-editaveis { list-style: none; margin: 0; padding: 0; }
@@ -93,6 +96,7 @@ code.caminho {
   .linha-categoria .botao { grid-column: 2; grid-row: 3 / span 2; }
   .linha-categoria.linha-nova .botao { grid-column: 1 / -1; grid-row: 3; width: 100%; }
   .grupo-categorias .linhas-editaveis { padding-left: 12px; }
+  .preco-quarto { padding: 14px 12px 4px; }
   .linha-nova { padding: 12px !important; }
 }
 
@@ -140,7 +144,6 @@ code.caminho {
 
 /* ----- Backup ----- */
 .estado-backup .cartao-topo h2 { flex: 0 1 auto; }
-.estado-backup .cartao-topo { flex-wrap: wrap; }
 .estado-backup .etiqueta { font-size: var(--fs-base); padding: 4px 14px 4px 10px; }
 .estado-backup .etiqueta svg { width: 18px; height: 18px; }
 .sugestoes-pasta { display: flex; flex-direction: column; gap: 12px; margin-top: 8px; }
@@ -150,6 +153,7 @@ code.caminho {
 }
 .sugestao-pasta .onde { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .sugestao-pasta .onde .rotulo { font-weight: 700; }
+.sugestao-pasta .onde .caminho { align-self: flex-start; }
 .lista-historico { list-style: none; margin: 0; padding: 0; }
 .lista-historico > li { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 14px; padding: 12px 0; border-bottom: 1px solid var(--linha); }
 .lista-historico > li:last-child { border-bottom: 0; }
@@ -172,6 +176,20 @@ code.caminho {
 .nota-importacao { margin: 12px 0 0; font-size: var(--fs-min); color: var(--tinta-suave); }
 .tabela .item-verificacao { font-weight: 700; }
 .tabela td .etiqueta { vertical-align: middle; }
+/* No celular cada verificação vira um cartãozinho: nome + resultado em cima, Planilha e Sistema embaixo */
+@media (max-width: 599px) {
+  .tabela-conferencia thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .tabela-conferencia, .tabela-conferencia tbody { display: block; }
+  .tabela-conferencia tbody tr {
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 6px 12px;
+    padding: 12px 0; border-bottom: 1px solid var(--linha);
+  }
+  .tabela-conferencia tbody tr td { padding: 0; border: 0; background: transparent !important; }
+  .tabela-conferencia .item-verificacao { grid-column: 1 / -1; }
+  .tabela-conferencia .resultado-verificacao { grid-column: 1 / -1; grid-row: 2; }
+  .tabela-conferencia td[data-rotulo] { text-align: left; display: flex; flex-direction: column; }
+  .tabela-conferencia td[data-rotulo]::before { content: attr(data-rotulo); font-size: var(--fs-min); color: var(--tinta-suave); }
+}
 .resumo-importacao { list-style: none; margin: 4px 0 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 24px; }
 .resumo-importacao > li { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--linha); }
 .resumo-importacao > li.largo { grid-column: 1 / -1; }

@@ -11,7 +11,8 @@
   padding: 14px 16px; border-radius: var(--raio-g);
   background: var(--livre-fundo); border: 2px solid var(--livre-borda);
 }
-.hospede-escolhido .quem { flex: 1 1 260px; min-width: 0; }
+.hospede-escolhido .chip-icone { background: var(--branco); box-shadow: var(--sombra-1); }
+.hospede-escolhido .quem { flex: 1 1 200px; min-width: 0; }
 .hospede-escolhido .nome { font-size: var(--fs-h3); font-weight: 700; line-height: 1.25; }
 .hospede-escolhido .suave { color: var(--tinta); }
 .ja-veio { display: inline-flex; align-items: center; gap: 8px; margin-top: 4px; font-weight: 700; color: var(--verde-escuro); }
@@ -58,6 +59,11 @@
 /* ----- Janela "Recebi" ----- */
 .quem-paga { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 14px; margin: 4px 0 16px; font-size: var(--fs-medio); }
 .texto-janela { font-size: var(--fs-medio); margin: 14px 0 0; }
+/* Rodapé das janelas de formulário igual ao da confirmação (faixa creme com linha em cima) */
+.corpo-janela > .botoes.rodape-janela {
+  margin: 20px -28px 0; padding: 20px 28px calc(24px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--linha); background: #fffcf6;
+}
 
 /* ----- Detalhe da estadia ----- */
 .tela-estadia .titulo-tela > div:first-child { min-width: 0; }
@@ -105,9 +111,9 @@
 .marco { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: var(--raio); background: var(--azul-espuma); }
 .marco > div { display: flex; flex-direction: column; min-width: 0; line-height: 1.3; }
 .marco .data-marco { font-size: var(--fs-medio); font-weight: 700; font-variant-numeric: tabular-nums; }
-.resumo-datas { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-weight: 700; margin: 0 0 12px; }
+.resumo-datas { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 20px; font-weight: 700; margin: 0 0 12px; }
+.resumo-datas > span { display: inline-flex; align-items: center; gap: 8px; }
 .resumo-datas svg { width: 22px; height: 22px; color: var(--azul-escuro); }
-.resumo-datas svg + svg, .resumo-datas svg:not(:first-child) { margin-left: 10px; }
 
 /* ----- Celular ----- */
 @media (max-width: 899px) {
@@ -119,15 +125,21 @@
   .tela-nova .titulo-tela > .botoes, .tela-estadia .titulo-tela > .botoes { width: 100%; }
   .passo > .rotulo .etiqueta { margin-left: 8px; }
   .passo .escolha .opcao { flex: 1 1 auto; }
+  /* Noites, quartos e pessoas: duas colunas iguais em vez de uma fila comprida */
+  .escolha-grade { flex: 1 1 100%; }
+  .escolha-grade .escolha { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .escolha-grade .opcao { min-width: 0; padding-right: 12px; }
+  .escolha-grade.quartos .icone-opcao { display: none; }
   .passo input.entrada-data { width: 100%; }
   .hospede-escolhido > .botao, .resultados-busca li > .botao { width: 100%; }
+  .resultados-busca .chip-icone { display: none; }
   .linha-total .valor-total { font-size: var(--fs-h2); }
   .tela-nova > .botao.enorme { font-size: var(--fs-medio); }
 
   .numeros-estadia .numero-grande { padding: 12px 12px 12px 14px; }
   .numeros-estadia .numero-grande .valor { font-size: var(--fs-h3); }
   .acoes-estadia .botoes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .acoes-estadia .botao { width: 100%; min-width: 0; padding-left: 10px; padding-right: 10px; }
+  .acoes-estadia .botao { width: 100%; min-width: 0; padding-left: 8px; padding-right: 8px; gap: 8px; }
   .acoes-principais .botao:only-child, .acoes-outras .cancelar { grid-column: 1 / -1; margin-left: 0; }
   .marcos { grid-template-columns: minmax(0, 1fr); }
 

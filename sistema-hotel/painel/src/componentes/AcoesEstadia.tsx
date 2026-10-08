@@ -178,7 +178,7 @@ export function JanelaReceber({
       </div>
       <CamposPagamento valor={p} aoMudar={setP} idBase="receber" />
       <MensagemErro erro={erro} />
-      <div className="botoes direita">
+      <div className="botoes direita rodape-janela">
         {rodape}
         <button className="botao grande" onClick={aoFechar}>
           Voltar

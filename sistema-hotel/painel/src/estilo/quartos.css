@@ -4,6 +4,7 @@
 /* --- Mapa --- */
 .area-quartos .mapa-rolagem { max-height: calc(100vh - 300px); min-height: 360px; }
 .area-quartos .titulo-tela .periodo { color: var(--tinta); font-weight: 700; }
+.area-quartos .mapa-linha.cabecalho-mapa { background: #fff; }
 .area-quartos .mapa-cab.mapa-canto {
   position: sticky; left: 0; z-index: 2;
   display: flex; align-items: center; justify-content: center;
@@ -41,6 +42,7 @@
 .area-quartos .lista-quartos .etiqueta { justify-self: start; }
 
 /* --- Formulário do quarto --- */
+.area-quartos .form-quarto .linha-campos { grid-template-columns: minmax(140px, 1fr) minmax(200px, 2fr) auto; }
 .area-quartos .contador-pessoas { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .area-quartos .contador-pessoas .valor { font-size: var(--fs-medio); font-weight: 700; min-width: 104px; text-align: center; font-variant-numeric: tabular-nums; }
 .area-quartos .opcao[role='checkbox'] .marca { border-radius: 8px; }
@@ -48,6 +50,7 @@
 .area-quartos .outra-comodidade { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
 .area-quartos .outra-comodidade .entrada { max-width: 320px; flex: 1 1 200px; min-height: 52px; }
 .area-quartos .form-quarto .marcar { margin-bottom: 4px; }
+.area-quartos .form-quarto .marcar input { flex-shrink: 0; }
 .area-quartos .rodape-form { margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--linha); }
 
 /* --- Fotos do quarto --- */
@@ -63,8 +66,10 @@
 .area-quartos .grade-fotos { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
 .area-quartos .foto-quarto { margin: 0; padding: 10px; border-radius: 18px; background: #fff; box-shadow: var(--sombra-2), 0 0 0 1px var(--linha); }
 .area-quartos .foto-quarto img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 12px; }
-.area-quartos .foto-quarto figcaption { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
-.area-quartos .foto-quarto figcaption .botao { width: 100%; padding-left: 8px; padding-right: 8px; }
+.area-quartos .foto-quarto figcaption { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.area-quartos .foto-quarto figcaption > * { flex: 1 1 auto; }
+.area-quartos .foto-quarto figcaption .botao { padding-left: 10px; padding-right: 10px; gap: 6px; }
+.area-quartos .foto-quarto figcaption .mover { flex: 1 1 calc(50% - 4px); }
 .area-quartos .foto-quarto .etiqueta { justify-content: center; min-height: 48px; }
 
 /* --- Prévia (como o hóspede vê) --- */
@@ -100,6 +105,10 @@
 .area-quartos .lista-estadias .principal-item { min-width: 0; }
 .area-quartos .lista-estadias .valor-estadia { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; font-weight: 700; text-align: right; }
 
+@media (max-width: 1199px) {
+  .area-quartos .form-quarto .linha-campos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .area-quartos .form-quarto .linha-campos > .campo:last-child { grid-column: 1 / -1; }
+}
 @media (max-width: 899px) {
   .area-quartos .lista-quartos > li { grid-template-columns: auto minmax(0, 1fr); }
   .area-quartos .lista-quartos .etiqueta { grid-column: 2; }
@@ -117,6 +126,9 @@
   .area-quartos .titulo-tela > .botoes > .botao { flex: 1 1 auto; }
   .area-quartos .mapa-dica { align-items: flex-start; }
   .area-quartos .mapa-rolagem { max-height: calc(100vh - 170px); }
+  .area-quartos .form-quarto .linha-campos { grid-template-columns: minmax(0, 1fr); }
+  .area-quartos .lista-quartos .acoes-quarto { flex-wrap: nowrap; gap: 6px; }
+  .area-quartos .lista-quartos .acoes-quarto .botao { flex: 1 1 0; min-width: 0; padding-left: 6px; padding-right: 6px; gap: 6px; }
   .area-quartos .lista-clientes > li { grid-template-columns: auto minmax(0, 1fr); }
   .area-quartos .lista-clientes .historico { grid-column: 2; text-align: left; }
   .area-quartos .ficha-numeros { grid-template-columns: minmax(0, 1fr); }

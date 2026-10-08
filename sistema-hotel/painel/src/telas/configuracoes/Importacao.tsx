@@ -140,7 +140,7 @@ function Resultado({ imp }: { imp: Importacao }) {
   return (
     <>
       <section className={`cartao cartao-lista ${tudoBate ? 'tom-livre' : 'tom-perigo'}`}>
-        <header className="cartao-topo">
+        <header className="cartao-topo topo-quebra">
           <ChipIcone icone={ClipboardCheck} tom={tudoBate ? 'tom-livre' : 'tom-perigo'} />
           <h2>Conferência dos totais</h2>
           {tudoBate ? <Etiqueta estado="pago">Tudo bate com a planilha</Etiqueta> : <Etiqueta estado="atrasado">Há diferenças</Etiqueta>}
@@ -149,7 +149,7 @@ function Resultado({ imp }: { imp: Importacao }) {
           Planilha <strong>{imp.arquivo}</strong>, importada em {dataHora(imp.feitaEm)}.
         </p>
         <div className="rolagem-x">
-          <table className="tabela">
+          <table className="tabela tabela-conferencia">
             <thead>
               <tr>
                 <th>Verificação</th>
@@ -162,9 +162,13 @@ function Resultado({ imp }: { imp: Importacao }) {
               {r.validacao.map((v) => (
                 <tr key={v.item}>
                   <td className="item-verificacao">{v.item}</td>
-                  <td className="numero">{valor(v.planilha, v.dinheiro)}</td>
-                  <td className="numero">{valor(v.sistema, v.dinheiro)}</td>
-                  <td>
+                  <td className="numero" data-rotulo="Planilha">
+                    {valor(v.planilha, v.dinheiro)}
+                  </td>
+                  <td className="numero" data-rotulo="Sistema">
+                    {valor(v.sistema, v.dinheiro)}
+                  </td>
+                  <td className="resultado-verificacao">
                     {v.planilha === v.sistema ? (
                       <Etiqueta estado="pago">Bate</Etiqueta>
                     ) : (

@@ -477,11 +477,11 @@ function FotosDoQuarto({ quarto }: { quarto: Quarto }) {
                 <Trash2 aria-hidden="true" />
                 Tirar
               </button>
-              <button className="botao pequeno" aria-label="Mover para a esquerda" disabled={i === 0} onClick={() => mover(i, -1)}>
+              <button className="botao pequeno mover" aria-label="Mover para a esquerda" disabled={i === 0} onClick={() => mover(i, -1)}>
                 <ArrowLeft aria-hidden="true" />
                 Esquerda
               </button>
-              <button className="botao pequeno" aria-label="Mover para a direita" disabled={i === quarto.fotos.length - 1} onClick={() => mover(i, 1)}>
+              <button className="botao pequeno mover" aria-label="Mover para a direita" disabled={i === quarto.fotos.length - 1} onClick={() => mover(i, 1)}>
                 Direita
                 <ArrowRight aria-hidden="true" />
               </button>

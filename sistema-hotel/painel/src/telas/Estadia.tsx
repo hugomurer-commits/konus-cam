@@ -405,10 +405,14 @@ export function TelaEstadia() {
             </div>
           </div>
           <p className="resumo-datas">
-            <BedDouble aria-hidden="true" />
-            {noites(d.noites.length)} no quarto {d.quarto.codigo}
-            <Users aria-hidden="true" />
-            {e.pessoas} {e.pessoas === 1 ? 'pessoa' : 'pessoas'}
+            <span>
+              <BedDouble aria-hidden="true" />
+              {noites(d.noites.length)} no quarto {d.quarto.codigo}
+            </span>
+            <span>
+              <Users aria-hidden="true" />
+              {e.pessoas} {e.pessoas === 1 ? 'pessoa' : 'pessoas'}
+            </span>
           </p>
           <table className="tabela tabela-noites">
             <thead>
@@ -479,7 +483,7 @@ function JanelaEstender({ d, aoFechar }: { d: DetalheEstadia; aoFechar: () => vo
         mais.
       </p>
       <MensagemErro erro={erro} />
-      <div className="botoes direita">
+      <div className="botoes direita rodape-janela">
         <button className="botao grande" onClick={aoFechar}>
           Voltar
         </button>
@@ -526,7 +530,7 @@ function JanelaTrocar({ d, aoFechar }: { d: DetalheEstadia; aoFechar: () => void
       </div>
       {e.status === 'hospedado' && <p className="suave pequeno">O quarto atual fica marcado para limpar.</p>}
       <MensagemErro erro={erro} />
-      <div className="botoes direita">
+      <div className="botoes direita rodape-janela">
         <button className="botao grande" onClick={aoFechar}>
           Voltar
         </button>
@@ -594,7 +598,7 @@ function JanelaCancelar({ d, aoFechar }: { d: DetalheEstadia; aoFechar: () => vo
         </>
       )}
       <MensagemErro erro={erro} />
-      <div className="botoes direita">
+      <div className="botoes direita rodape-janela">
         <button className="botao grande" onClick={aoFechar}>
           Voltar
         </button>
@@ -640,7 +644,7 @@ function JanelaEditar({ d, aoFechar }: { d: DetalheEstadia; aoFechar: () => void
         <textarea id="editar-obs" value={obs} onChange={(ev) => setObs(ev.target.value)} />
       </div>
       <MensagemErro erro={erro} />
-      <div className="botoes direita">
+      <div className="botoes direita rodape-janela">
         <button className="botao grande" onClick={aoFechar}>
           Voltar
         </button>

@@ -637,3 +637,6 @@ svg { flex-shrink: 0; }
 .tom-contas { --tom: var(--marrom-janela); --tom-fundo: var(--limpar-fundo); --tom-texto: var(--marrom-janela); }
 .tom-hoje { --tom: var(--laranja-sol); --tom-fundo: var(--sol-claro); --tom-texto: var(--laranja-escuro); }
 .tom-config { --tom: var(--tinta-suave); --tom-fundo: var(--areia-funda); --tom-texto: var(--tinta-suave); }
+/* Subtítulo alinhado com o texto do título (depois do ícone) */
+.titulo-tela h1:has(> .chip-icone) + .subtitulo { margin: 4px 0 0 62px; }
+@media (max-width: 599px) { .titulo-tela h1:has(> .chip-icone) + .subtitulo { margin-left: 0; } }
