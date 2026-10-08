@@ -1,9 +1,10 @@
 import { NavLink, Navigate, Route, Routes } from 'react-router-dom';
-import { EmConstrucao } from '../../componentes/Layout';
 import { TelaImportacao } from './Importacao';
+import { ConfigBackup, PrimeirosPassos } from './Backup';
 import { ConfigCategorias, ConfigHotel, ConfigPrecos, ConfigRecebedores, ConfigSenha } from './Formularios';
 
 const ABAS = [
+  { para: 'primeiros-passos', texto: 'Primeiros passos' },
   { para: 'hotel', texto: 'Hotel' },
   { para: 'precos', texto: 'Preços' },
   { para: 'recebedores', texto: 'Quem recebe' },
@@ -28,13 +29,15 @@ export function Configuracoes() {
       </nav>
       <Routes>
         <Route index element={<Navigate to="hotel" replace />} />
+        <Route path="primeiros-passos" element={<PrimeirosPassos />} />
         <Route path="hotel" element={<ConfigHotel />} />
+        <Route path="backup" element={<ConfigBackup />} />
         <Route path="precos" element={<ConfigPrecos />} />
         <Route path="recebedores" element={<ConfigRecebedores />} />
         <Route path="categorias" element={<ConfigCategorias />} />
         <Route path="importacao" element={<TelaImportacao />} />
         <Route path="senha" element={<ConfigSenha />} />
-        <Route path="*" element={<EmConstrucao titulo="Em construção" />} />
+        <Route path="*" element={<Navigate to="hotel" replace />} />
       </Routes>
     </>
   );

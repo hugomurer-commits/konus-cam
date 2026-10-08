@@ -7,4 +7,5 @@ dados-originais/
 # Pacote gerado para o instalador do Windows
 windows/pacote/
 windows/saida/
+windows/baixados/
 *.log

@@ -8,7 +8,7 @@
     "painel"
   ],
   "scripts": {
-    "dev": "npm run dev -w servidor & npm run dev -w painel",
+    "dev": "concurrently -k -n servidor,painel -c blue,green \"npm run dev -w servidor\" \"npm run dev -w painel\"",
     "build": "npm run build -w painel && npm run build -w servidor",
     "start": "node servidor/dist/servidor.mjs",
     "test": "npm test -w servidor",
@@ -17,5 +17,8 @@
   },
   "engines": {
     "node": ">=22"
+  },
+  "devDependencies": {
+    "concurrently": "9.2.1"
   }
 }

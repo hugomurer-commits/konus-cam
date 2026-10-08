@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../api';
 import { useSessao } from '../sessao';
@@ -71,11 +71,13 @@ export function Layout() {
   );
 }
 
-export function EmConstrucao({ titulo }: { titulo: string }) {
+export function PaginaNaoEncontrada() {
   return (
     <div className="cartao">
-      <h1>{titulo}</h1>
-      <p className="suave">Esta tela ainda está sendo construída.</p>
+      <h1>Página não encontrada</h1>
+      <Link to="/" className="botao principal">
+        Ir para Hoje
+      </Link>
     </div>
   );
 }

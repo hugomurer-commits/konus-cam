@@ -6,7 +6,7 @@ import '@fontsource/atkinson-hyperlegible/400.css';
 import '@fontsource/atkinson-hyperlegible/700.css';
 import './estilo/app.css';
 import { ProvedorInteracao } from './componentes/Interacao';
-import { EmConstrucao, Layout } from './componentes/Layout';
+import { Layout, PaginaNaoEncontrada } from './componentes/Layout';
 import { ExigirSessao } from './sessao';
 import { Entrar } from './telas/Entrar';
 import { PrimeiroUso } from './telas/PrimeiroUso';
@@ -46,7 +46,7 @@ createRoot(document.getElementById('raiz')!).render(
               <Route path="caixa/*" element={<Caixa />} />
               <Route path="contas/*" element={<Contas />} />
               <Route path="configuracoes/*" element={<Configuracoes />} />
-              <Route path="*" element={<EmConstrucao titulo="Página não encontrada" />} />
+              <Route path="*" element={<PaginaNaoEncontrada />} />
             </Route>
           </Routes>
         </BrowserRouter>
