@@ -90,6 +90,16 @@ export function rotasConfiguracoes(app: FastifyInstance, ctx: Contexto) {
   // ── Quem recebe (H/V/N)
   app.get('/api/contas-recebedoras', async () => ({
     contas: banco.prepare('SELECT id, sigla, nome, ativa, ordem FROM contas_recebedoras ORDER BY ordem, id').all(),
+    // Sugestão para quem recebeu: a conta mais usada nos últimos 200 pagamentos
+    maisUsada:
+      (banco
+        .prepare(
+          `SELECT conta_recebedora_id FROM (SELECT conta_recebedora_id FROM pagamentos_validos
+             WHERE conta_recebedora_id IS NOT NULL ORDER BY id DESC LIMIT 200)
+           GROUP BY conta_recebedora_id ORDER BY COUNT(*) DESC LIMIT 1`,
+        )
+        .pluck()
+        .get() as number | undefined) ?? null,
   }));
 
   const zRecebedora = z.object({

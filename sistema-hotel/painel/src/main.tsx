@@ -12,6 +12,9 @@ import { Entrar } from './telas/Entrar';
 import { PrimeiroUso } from './telas/PrimeiroUso';
 import { Configuracoes } from './telas/configuracoes/Configuracoes';
 import { Quartos } from './telas/quartos/Quartos';
+import { NovaHospedagem } from './telas/NovaHospedagem';
+import { TelaEstadia } from './telas/Estadia';
+import { Hoje } from './telas/Hoje';
 
 const cliente = new QueryClient({
   defaultOptions: {
@@ -34,7 +37,9 @@ createRoot(document.getElementById('raiz')!).render(
                 </ExigirSessao>
               }
             >
-              <Route index element={<EmConstrucao titulo="Hoje" />} />
+              <Route index element={<Hoje />} />
+              <Route path="nova-hospedagem" element={<NovaHospedagem />} />
+              <Route path="estadia/:id" element={<TelaEstadia />} />
               <Route path="quartos/*" element={<Quartos />} />
               <Route path="caixa/*" element={<EmConstrucao titulo="Caixa" />} />
               <Route path="contas/*" element={<EmConstrucao titulo="Contas" />} />
