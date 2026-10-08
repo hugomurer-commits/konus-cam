@@ -1,0 +1,158 @@
+/* ===== Nova hospedagem, detalhe da estadia e janela "Recebi" (complementa app.css; só tokens existentes) ===== */
+
+/* ----- Passos da Nova hospedagem ----- */
+.passo > .rotulo .etiqueta { margin-left: 12px; vertical-align: middle; position: relative; top: -2px; }
+.passo > .rotulo .rotulo-extra { font-size: var(--fs-base); font-weight: 400; color: var(--tinta-suave); }
+.passo .escolha + .botoes, .passo .escolha + .para-limpar { margin-top: 12px; }
+
+/* Hóspede escolhido */
+.hospede-escolhido {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 12px 16px;
+  padding: 14px 16px; border-radius: var(--raio-g);
+  background: var(--livre-fundo); border: 2px solid var(--livre-borda);
+}
+.hospede-escolhido .chip-icone { background: var(--branco); box-shadow: var(--sombra-1); }
+.hospede-escolhido .quem { flex: 1 1 200px; min-width: 0; }
+.hospede-escolhido .nome { font-size: var(--fs-h3); font-weight: 700; line-height: 1.25; }
+.hospede-escolhido .suave { color: var(--tinta); }
+.ja-veio { display: inline-flex; align-items: center; gap: 8px; margin-top: 4px; font-weight: 700; color: var(--verde-escuro); }
+.ja-veio svg { width: 20px; height: 20px; stroke-width: 2.5; }
+.aviso-novo { display: flex; align-items: center; gap: 10px; font-weight: 700; color: var(--azul-escuro); margin-bottom: 12px; }
+.aviso-novo svg { width: 24px; height: 24px; }
+
+/* Resultados da busca */
+.resultados-busca { margin: 4px 0 8px; }
+.resultados-busca > li { padding: 12px 0; }
+.resultados-busca .chip-icone { width: 40px; height: 40px; border-radius: 12px; }
+.resultados-busca .chip-icone svg { width: 22px; height: 22px; }
+
+/* Datas */
+.passo input.entrada-data { width: 210px; min-height: 60px; }
+.faixa-saida {
+  display: flex; align-items: center; gap: 10px; margin: 0; padding: 12px 16px;
+  border-radius: var(--raio); background: var(--sai-fundo); color: var(--sai-texto); font-weight: 700;
+}
+.faixa-saida svg { width: 24px; height: 24px; stroke-width: 2.25; }
+
+/* Quarto */
+.opcao .capacidade { margin-left: 2px; font-size: var(--fs-min); font-weight: 400; }
+.quarto-limpar {
+  display: inline-flex; align-items: center; flex-wrap: wrap; gap: 10px;
+  padding: 6px 6px 6px 10px; border: 2px dashed var(--limpar-borda); border-radius: 16px; background: var(--branco);
+}
+.passo .ocupados { display: flex; align-items: center; gap: 8px; margin: 12px 0 0; }
+.passo .ocupados svg { width: 18px; height: 18px; }
+
+/* Diária e total */
+.conta-diaria { margin-top: 16px; padding: 14px 18px; border-radius: var(--raio-g); background: var(--azul-espuma); border: 1px solid var(--ocupado-fundo); }
+.linha-diaria { font-size: var(--fs-medio); }
+.linha-total {
+  display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 4px 16px;
+  margin: 12px 0 0; padding-top: 12px; border-top: 1px dashed var(--borda-campo); font-size: var(--fs-medio);
+}
+.linha-total .valor-total { font-size: var(--fs-dinheiro); font-weight: 700; line-height: 1.1; color: var(--azul-escuro); }
+
+/* Mais opções e botão final */
+.mais-opcoes { padding-top: 14px; padding-bottom: 14px; }
+.tela-nova > .botao.enorme { margin-bottom: 8px; }
+
+/* ----- Janela "Recebi" ----- */
+.quem-paga { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 14px; margin: 4px 0 16px; font-size: var(--fs-medio); }
+.texto-janela { font-size: var(--fs-medio); margin: 14px 0 0; }
+.texto-janela + .botoes { margin-top: 12px; }
+.nota-janela { margin: 12px 0 0; }
+
+/* ----- Detalhe da estadia ----- */
+.tela-estadia .titulo-tela > div:first-child { min-width: 0; }
+.tela-estadia .titulo-tela h1 { align-items: center; }
+.titulo-estadia { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 14px; min-width: 0; }
+.titulo-estadia .nome-estadia { overflow-wrap: anywhere; }
+.titulo-estadia .etiqueta { font-size: var(--fs-min); }
+.tela-estadia .subtitulo { margin: 6px 0 0; }
+
+.numeros-estadia .numero-grande { min-width: 0; }
+.numeros-estadia .rotulo { display: flex; align-items: center; gap: 6px; margin-top: 2px; }
+.numeros-estadia .rotulo svg { width: 20px; height: 20px; stroke-width: 2.5; }
+.numeros-estadia .falta { box-shadow: var(--sombra-2), inset 0 0 0 2px var(--vermelho-alerta); }
+.numeros-estadia .falta .rotulo { color: var(--vermelho-alerta); font-weight: 700; }
+.numeros-estadia .tom-caixa .rotulo svg { color: var(--verde-escuro); }
+
+.acoes-estadia { padding-top: 16px; padding-bottom: 16px; }
+.acoes-outras { margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--linha); }
+.acoes-outras .cancelar { margin-left: auto; }
+.acoes-principais .botao { min-width: 150px; }
+
+/* Pagamentos */
+.tabela-pagamentos td { vertical-align: middle; }
+.tabela-pagamentos .quando > span { display: block; }
+.tabela-pagamentos .forma { display: inline-flex; align-items: center; gap: 10px; font-weight: 700; }
+.tabela-pagamentos .forma svg { width: 24px; height: 24px; color: var(--verde-escuro); }
+.tabela-pagamentos td.valor { font-size: var(--fs-medio); font-weight: 700; color: var(--verde-escuro); white-space: nowrap; }
+.tabela-pagamentos td.acao { text-align: right; width: 1%; white-space: nowrap; }
+.tabela-pagamentos tr.desfeito td, .tabela-pagamentos tr.desfeito td.valor, .tabela-pagamentos tr.desfeito .forma svg { color: var(--tinta-suave); }
+.tabela-pagamentos tr.desfeito .forte, .tabela-pagamentos tr.desfeito .forma, .tabela-pagamentos tr.desfeito td.valor { text-decoration: line-through; }
+
+/* Hóspede e histórico */
+.nome-hospede { font-size: var(--fs-h3); font-weight: 700; margin: 6px 0 4px; line-height: 1.25; }
+.lista-info { list-style: none; margin: 0 0 14px; padding: 0; }
+.linha-info { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--linha); }
+.linha-info:last-child { border-bottom: 0; }
+.linha-info > svg { width: 22px; height: 22px; margin-top: 2px; color: var(--azul-escuro); }
+.rotulo-info { color: var(--tinta-suave); }
+.obs-estadia { display: flex; gap: 12px; padding: 12px 16px; border-radius: var(--raio); background: var(--sol-claro); }
+.obs-estadia svg { width: 22px; height: 22px; margin-top: 2px; color: var(--laranja-escuro); }
+.obs-estadia p { margin: 0; white-space: pre-line; overflow-wrap: anywhere; }
+
+/* Datas */
+.marcos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 8px 0 12px; }
+.marco { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: var(--raio); background: var(--azul-espuma); }
+.marco > div { display: flex; flex-direction: column; min-width: 0; line-height: 1.3; }
+.marco .data-marco { font-size: var(--fs-medio); font-weight: 700; font-variant-numeric: tabular-nums; }
+.resumo-datas { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 20px; font-weight: 700; margin: 0 0 12px; }
+.resumo-datas > span { display: inline-flex; align-items: center; gap: 8px; }
+.resumo-datas svg { width: 22px; height: 22px; color: var(--azul-escuro); }
+
+/* ----- Celular ----- */
+@media (max-width: 899px) {
+  .tela-nova .titulo-tela h1 .chip-icone { width: 44px; height: 44px; }
+  .tela-nova .titulo-tela h1, .tela-estadia .titulo-tela h1 { font-size: var(--fs-h2); }
+  .tela-nova .passo > .rotulo { font-size: var(--fs-medio); }
+}
+@media (max-width: 599px) {
+  .tela-nova .titulo-tela > .botoes, .tela-estadia .titulo-tela > .botoes { width: 100%; }
+  .passo > .rotulo .etiqueta { margin-left: 8px; }
+  .passo .escolha .opcao { flex: 1 1 auto; }
+  /* Noites, quartos e pessoas: duas colunas iguais em vez de uma fila comprida */
+  .escolha-grade { flex: 1 1 100%; }
+  .escolha-grade .escolha { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .escolha-grade .opcao { min-width: 0; padding-right: 12px; }
+  .escolha-grade.quartos .icone-opcao { display: none; }
+  .passo input.entrada-data { width: 100%; }
+  .hospede-escolhido > .botao, .resultados-busca li > .botao { width: 100%; }
+  .resultados-busca .chip-icone, .hospede-escolhido .chip-icone { display: none; }
+  .linha-total .valor-total { font-size: var(--fs-h2); }
+  .tela-nova > .botao.enorme { font-size: var(--fs-medio); }
+
+  .numeros-estadia .numero-grande { padding: 12px 12px 12px 14px; }
+  .numeros-estadia .numero-grande .valor { font-size: var(--fs-h3); }
+  .acoes-estadia .botoes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .acoes-estadia .botao { width: 100%; min-width: 0; padding-left: 8px; padding-right: 8px; gap: 8px; }
+  .acoes-principais .botao:only-child, .acoes-outras .cancelar { grid-column: 1 / -1; margin-left: 0; }
+  .marcos { grid-template-columns: minmax(0, 1fr); }
+
+  /* Pagamentos viram cartõezinhos empilhados: valor, como e quando à esquerda; Desfazer à direita */
+  .tabela-pagamentos, .tabela-pagamentos tbody { display: block; }
+  .tabela-pagamentos thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .tabela-pagamentos tr {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: 'valor acao' 'como acao' 'quando acao';
+    align-items: center; column-gap: 12px; row-gap: 2px; padding: 12px 0; border-bottom: 1px solid var(--linha);
+  }
+  .tabela-pagamentos tr:last-child { border-bottom: 0; }
+  .tabela-pagamentos td { padding: 0; border: 0; background: none !important; }
+  .tabela-pagamentos td.valor { grid-area: valor; text-align: left; }
+  .tabela-pagamentos td.como { grid-area: como; }
+  .tabela-pagamentos td.quando { grid-area: quando; }
+  .tabela-pagamentos td.quando > span { display: inline; }
+  .tabela-pagamentos td.quando > span + span::before { content: ' · '; }
+  .tabela-pagamentos td.acao { grid-area: acao; width: auto; }
+}

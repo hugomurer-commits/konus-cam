@@ -1,0 +1,78 @@
+# Gera o instalador do Sistema do Hotel (Instalar-Sistema-Hotel.exe) num Windows do GitHub,
+# testa a instalação de verdade e publica o .exe para download direto (sem zip, sem login):
+# https://github.com/hugomurer-commits/konus-cam/releases/download/instalador-hotel/Instalar-Sistema-Hotel.exe
+name: Instalador do hotel
+
+on:
+  push:
+    paths:
+      - 'sistema-hotel/**'
+      - '.github/workflows/instalador-hotel.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write  # para publicar o .exe na página de downloads (Releases)
+
+concurrency:
+  group: instalador-hotel-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  instalador:
+    name: Gerar e testar o instalador
+    runs-on: windows-2022
+    timeout-minutes: 40
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: sistema-hotel
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: sistema-hotel/package-lock.json
+
+      - name: Inno Setup
+        run: |
+          if (-not (Test-Path "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe")) {
+            choco install innosetup -y --no-progress
+          }
+
+      - name: Testes, build e instalador
+        run: ./windows/build-windows.ps1
+
+      - name: Instalar, reiniciar, atualizar e desinstalar
+        run: ./windows/testar-instalador.ps1
+
+      - name: Log do serviço (se algo falhou)
+        if: failure()
+        run: |
+          if (Test-Path C:\SistemaHotel\dados\logs\servico.log) { Get-Content C:\SistemaHotel\dados\logs\servico.log -Tail 100 }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Instalar-Sistema-Hotel
+          path: sistema-hotel/windows/saida/Instalar-Sistema-Hotel.exe
+          retention-days: 90
+          if-no-files-found: error
+
+      # Só chega aqui se o teste de instalação passou: o link direto sempre aponta para um .exe testado
+      - name: Publicar para download direto
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = 'instalador-hotel'
+          $exe = 'windows/saida/Instalar-Sistema-Hotel.exe'
+          $notas = "Instalador do Sistema do Hotel, testado no Windows. Gerado do commit $env:GITHUB_SHA ($env:GITHUB_REF_NAME). Como instalar: sistema-hotel/COMO-INSTALAR.md"
+          gh release view $tag *> $null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create $tag $exe --prerelease --target $env:GITHUB_SHA --title 'Instalador do Sistema do Hotel' --notes $notas
+          } else {
+            gh release upload $tag $exe --clobber
+            gh release edit $tag --notes $notas
+          }
+          if ($LASTEXITCODE -ne 0) { throw 'Não consegui publicar o instalador.' }
