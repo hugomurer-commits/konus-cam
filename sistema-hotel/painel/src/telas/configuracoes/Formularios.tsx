@@ -85,7 +85,7 @@ export function ConfigHotel() {
           <h2>Hotel</h2>
         </header>
         <p className="apoio">Nome, cidade, WhatsApp e horários de entrada e saída.</p>
-        <div className="linha-campos">{CAMPOS_HOTEL.map(campo)}</div>
+        <div className="linha-campos campos-alinhados">{CAMPOS_HOTEL.map(campo)}</div>
       </section>
       <section className="cartao">
         <header className="cartao-topo">
@@ -93,7 +93,7 @@ export function ConfigHotel() {
           <h2>Pix e reserva online</h2>
         </header>
         <p className="apoio">Usado na página de reservas (próxima fase). Pode preencher desde já.</p>
-        <div className="linha-campos">{CAMPOS_PIX.filter((c) => !c.area).map(campo)}</div>
+        <div className="linha-campos campos-alinhados">{CAMPOS_PIX.filter((c) => !c.area).map(campo)}</div>
         {CAMPOS_PIX.filter((c) => c.area).map(campo)}
       </section>
       <MensagemErro erro={salvar.error} />
@@ -207,7 +207,7 @@ function EditorTarifas({ quartoId, inicial, aoSalvar }: { quartoId: number | nul
         salvar.mutate();
       }}
     >
-      <div className="linha-campos" style={{ maxWidth: 900 }}>
+      <div className="linha-campos" style={{ maxWidth: 1000 }}>
         {valores.map((v, i) => (
           <CampoReais
             key={i}

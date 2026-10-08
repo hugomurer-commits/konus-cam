@@ -2,6 +2,7 @@
    Complementos de app.css, só com os tokens dele. Tudo dentro de .area-quartos (Quartos.tsx) para não vazar para outras telas. */
 
 /* --- Mapa --- */
+.area-quartos .mapa-rolagem { max-height: calc(100vh - 300px); min-height: 360px; }
 .area-quartos .titulo-tela .periodo { color: var(--tinta); font-weight: 700; }
 .area-quartos .mapa-cab.mapa-canto {
   position: sticky; left: 0; z-index: 2;
@@ -115,6 +116,7 @@
   .area-quartos .titulo-tela .navegador .botao { flex: 1 1 auto; padding-left: 10px; padding-right: 10px; gap: 6px; }
   .area-quartos .titulo-tela > .botoes > .botao { flex: 1 1 auto; }
   .area-quartos .mapa-dica { align-items: flex-start; }
+  .area-quartos .mapa-rolagem { max-height: calc(100vh - 170px); }
   .area-quartos .lista-clientes > li { grid-template-columns: auto minmax(0, 1fr); }
   .area-quartos .lista-clientes .historico { grid-column: 2; text-align: left; }
   .area-quartos .ficha-numeros { grid-template-columns: minmax(0, 1fr); }

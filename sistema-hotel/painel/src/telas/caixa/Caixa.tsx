@@ -373,47 +373,40 @@ function Comparacao({ r }: { r: Resumo }) {
   return (
     <section className="cartao cartao-lista tom-config">
       {topo}
-      <div className="rolagem-x">
+      <div className="rolagem-x comparacao">
         <table className="tabela">
           <thead>
             <tr>
-              <th></th>
+              <th>
+                <span className="oculto-leitor">O quê</span>
+              </th>
               <th className="numero">{maiuscula(mesAnt)}</th>
               <th className="numero">Agora</th>
               <th>Mudou</th>
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <th scope="row">Entradas</th>
-              <td className="numero">
-                <Dinheiro valor={a.entradas} />
-              </td>
-              <td className="numero">
-                <Dinheiro valor={r.entradas} />
-              </td>
-              <td>{variacao(r.entradas, a.entradas)}</td>
-            </tr>
-            <tr>
-              <th scope="row">Gastos de operação</th>
-              <td className="numero">
-                <Dinheiro valor={a.porGrupo.operacao} />
-              </td>
-              <td className="numero">
-                <Dinheiro valor={r.porGrupo.operacao} />
-              </td>
-              <td></td>
-            </tr>
-            <tr>
-              <th scope="row">Resultado do hotel</th>
-              <td className="numero">
-                <Dinheiro valor={a.resultados.resultadoHotel} />
-              </td>
-              <td className="numero">
-                <Dinheiro valor={r.resultados.resultadoHotel} />
-              </td>
-              <td>{variacao(r.resultados.resultadoHotel, a.resultados.resultadoHotel)}</td>
-            </tr>
+            {[
+              { titulo: 'Entradas', antes: a.entradas, agora: r.entradas, mudou: variacao(r.entradas, a.entradas) },
+              { titulo: 'Gastos de operação', antes: a.porGrupo.operacao, agora: r.porGrupo.operacao, mudou: null },
+              {
+                titulo: 'Resultado do hotel',
+                antes: a.resultados.resultadoHotel,
+                agora: r.resultados.resultadoHotel,
+                mudou: variacao(r.resultados.resultadoHotel, a.resultados.resultadoHotel),
+              },
+            ].map((l) => (
+              <tr key={l.titulo}>
+                <th scope="row">{l.titulo}</th>
+                <td className="numero" data-rotulo={maiuscula(mesAnt)}>
+                  <Dinheiro valor={l.antes} />
+                </td>
+                <td className="numero" data-rotulo="Agora">
+                  <Dinheiro valor={l.agora} />
+                </td>
+                <td className="mudou">{l.mudou}</td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>

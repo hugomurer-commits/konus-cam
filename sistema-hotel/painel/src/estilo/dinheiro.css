@@ -177,3 +177,18 @@
   .tela-dinheiro .lista-despesas .acoes { min-width: 236px; justify-content: flex-end; }
   .tela-dinheiro .lista-vales .acoes, .tela-dinheiro .lista-vales .valor { min-width: 0; }
 }
+@media (max-width: 699px) {
+  /* Período do Caixa: as três abas numa linha só */
+  .tela-dinheiro .barra-periodo .abas { flex-wrap: nowrap; }
+  .tela-dinheiro .barra-periodo .aba { flex: 1 1 0; min-width: 0; padding: 8px 6px; gap: 6px; }
+  /* Comparação: cada linha vira um bloco (sem rolagem de lado no celular) */
+  .tela-dinheiro .comparacao thead { display: none; }
+  .tela-dinheiro .comparacao table, .tela-dinheiro .comparacao tbody { display: block; }
+  .tela-dinheiro .comparacao tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 4px 12px; padding: 12px 0; border-bottom: 1px solid var(--linha); }
+  .tela-dinheiro .comparacao tr:last-child { border-bottom: 0; }
+  .tela-dinheiro .comparacao th, .tela-dinheiro .comparacao td { display: block; padding: 0; border: 0; background: transparent !important; }
+  .tela-dinheiro .comparacao th[scope='row'] { grid-column: 1; grid-row: 1; font-size: var(--fs-medio); }
+  .tela-dinheiro .comparacao td.mudou { grid-column: 2; grid-row: 1; }
+  .tela-dinheiro .comparacao td.numero { grid-column: 1 / -1; display: flex; justify-content: space-between; gap: 12px; }
+  .tela-dinheiro .comparacao td.numero::before { content: attr(data-rotulo); color: var(--tinta-suave); }
+}

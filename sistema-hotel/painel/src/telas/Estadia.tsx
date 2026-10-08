@@ -203,51 +203,51 @@ export function TelaEstadia() {
       </div>
 
       {!['cancelada', 'expirada'].includes(e.status) && (
-      <div className="cartao acoes-estadia">
-        <div className="botoes acoes-principais">
-          {e.status === 'confirmada' && (
-            <button className="botao principal grande largo" disabled={e.data_entrada > d.hoje} onClick={() => acoes.chegou(e.id, d.hospede.nome)}>
-              <LogIn aria-hidden="true" />
-              Chegou
-            </button>
-          )}
-          {e.status === 'hospedado' && (
-            <button className="botao principal grande largo" onClick={() => acoes.saiu({ id: e.id, nome: d.hospede.nome })}>
-              <LogOut aria-hidden="true" />
-              Saiu
-            </button>
-          )}
-          {!['cancelada', 'expirada'].includes(e.status) && (
-            <button
-              className={`botao grande verde largo${d.saldo > 0 ? ' principal' : ''}`}
-              onClick={() => acoes.receber(e.id, d.hospede.nome, d.saldo)}
-            >
-              <HandCoins aria-hidden="true" />
-              Recebi
-            </button>
+        <div className="cartao acoes-estadia">
+          <div className="botoes acoes-principais">
+            {e.status === 'confirmada' && (
+              <button className="botao principal grande" disabled={e.data_entrada > d.hoje} onClick={() => acoes.chegou(e.id, d.hospede.nome)}>
+                <LogIn aria-hidden="true" />
+                Chegou
+              </button>
+            )}
+            {e.status === 'hospedado' && (
+              <button className="botao principal grande" onClick={() => acoes.saiu({ id: e.id, nome: d.hospede.nome })}>
+                <LogOut aria-hidden="true" />
+                Saiu
+              </button>
+            )}
+            {!['cancelada', 'expirada'].includes(e.status) && (
+              <button
+                className={`botao grande verde${d.saldo > 0 ? ' principal' : ''}`}
+                onClick={() => acoes.receber(e.id, d.hospede.nome, d.saldo)}
+              >
+                <HandCoins aria-hidden="true" />
+                Recebi
+              </button>
+            )}
+          </div>
+          {ativa && (
+            <div className="botoes acoes-outras">
+              <button className="botao" onClick={() => setJanela('estender')}>
+                <CalendarPlus aria-hidden="true" />
+                Mais noites
+              </button>
+              <button className="botao" onClick={() => setJanela('trocar')}>
+                <ArrowLeftRight aria-hidden="true" />
+                Trocar quarto
+              </button>
+              <button className="botao" onClick={() => setJanela('editar')}>
+                <Pencil aria-hidden="true" />
+                Mudar dados
+              </button>
+              <button className="botao perigo cancelar" onClick={() => setJanela('cancelar')}>
+                <Ban aria-hidden="true" />
+                {e.status === 'confirmada' ? 'Cancelar / não veio' : 'Cancelar'}
+              </button>
+            </div>
           )}
         </div>
-        {ativa && (
-          <div className="botoes acoes-outras">
-            <button className="botao" onClick={() => setJanela('estender')}>
-              <CalendarPlus aria-hidden="true" />
-              Mais noites
-            </button>
-            <button className="botao" onClick={() => setJanela('trocar')}>
-              <ArrowLeftRight aria-hidden="true" />
-              Trocar quarto
-            </button>
-            <button className="botao" onClick={() => setJanela('editar')}>
-              <Pencil aria-hidden="true" />
-              Mudar dados
-            </button>
-            <button className="botao perigo cancelar" onClick={() => setJanela('cancelar')}>
-              <Ban aria-hidden="true" />
-              {e.status === 'confirmada' ? 'Cancelar / não veio' : 'Cancelar'}
-            </button>
-          </div>
-        )}
-      </div>
       )}
 
       <section className="cartao">

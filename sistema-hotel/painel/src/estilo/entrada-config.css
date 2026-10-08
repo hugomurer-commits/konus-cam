@@ -16,7 +16,11 @@
 }
 
 /* ----- Abas das configurações ----- */
-.abas-config { display: flex; width: fit-content; max-width: 100%; }
+.abas-config { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); width: 100%; }
+.abas-config .aba { padding: 8px 14px; }
+@media (min-width: 1500px) {
+  .abas-config { display: flex; flex-wrap: nowrap; width: fit-content; }
+}
 .abas-config .aba svg { color: var(--tinta-suave); }
 .abas-config .aba.ativo svg { color: var(--azul-escuro); }
 @media (max-width: 899px) {
@@ -26,6 +30,12 @@
 
 /* ----- Cartões: texto de apoio e rodapé de botões ----- */
 .cartao-topo + .apoio, .cartao-topo + p { margin-top: 2px; }
+/* Campos lado a lado com as caixas alinhadas mesmo quando o rótulo quebra em duas linhas */
+.campos-alinhados { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+@supports (grid-template-rows: subgrid) {
+  .campos-alinhados > .campo { display: grid; grid-row: span 3; grid-template-rows: subgrid; row-gap: 6px; }
+  .campos-alinhados > .campo > label { align-self: end; }
+}
 .apoio { color: var(--tinta-suave); margin: 0 0 16px; }
 .cartao-topo .etiqueta { flex-shrink: 0; }
 .botoes-rodape { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 4px; }
@@ -70,14 +80,18 @@ code.caminho {
 .grupo-categorias { margin-top: 6px; }
 .grupo-categorias .linhas-editaveis { padding-left: 18px; border-left: 4px solid var(--tom, var(--verde-coqueiro)); }
 @media (max-width: 899px) {
-  .linha-recebedora { grid-template-columns: 76px minmax(0, 1fr); }
-  .linha-recebedora .marcar { grid-column: 1 / -1; }
-  .linha-recebedora .botao { grid-column: 1 / -1; width: 100%; }
+  .linha-recebedora { grid-template-columns: 76px minmax(0, 1fr) auto; }
+  .linha-recebedora .col-nome { grid-column: 2 / -1; }
+  .linha-recebedora .marcar { grid-column: 1 / 3; grid-row: 2; }
+  .linha-recebedora .botao { grid-column: 3; grid-row: 2; }
+  .linha-recebedora.linha-nova .botao { grid-column: 1 / -1; width: 100%; }
   .linha-categoria { grid-template-columns: minmax(0, 1fr) auto; }
-  .linha-categoria .col-nome, .linha-categoria .col-grupo { grid-column: 1 / -1; }
-  .linha-categoria .marcar { grid-column: 1; }
-  .linha-categoria .col-usos { grid-column: 2; align-items: flex-end; text-align: right; }
-  .linha-categoria .botao { grid-column: 1 / -1; width: 100%; }
+  .linha-categoria .col-nome { grid-column: 1 / -1; grid-row: 1; }
+  .linha-categoria .col-grupo { grid-column: 1 / -1; grid-row: 2; }
+  .linha-categoria .marcar { grid-column: 1; grid-row: 3; min-height: 40px; }
+  .linha-categoria .col-usos { grid-column: 1; grid-row: 4; flex-direction: row; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: -8px; }
+  .linha-categoria .botao { grid-column: 2; grid-row: 3 / span 2; }
+  .linha-categoria.linha-nova .botao { grid-column: 1 / -1; grid-row: 3; width: 100%; }
   .grupo-categorias .linhas-editaveis { padding-left: 12px; }
   .linha-nova { padding: 12px !important; }
 }
@@ -137,11 +151,11 @@ code.caminho {
 .sugestao-pasta .onde { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .sugestao-pasta .onde .rotulo { font-weight: 700; }
 .lista-historico { list-style: none; margin: 0; padding: 0; }
-.lista-historico > li { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px 14px; padding: 12px 0; border-bottom: 1px solid var(--linha); }
+.lista-historico > li { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 14px; padding: 12px 0; border-bottom: 1px solid var(--linha); }
 .lista-historico > li:last-child { border-bottom: 0; }
-.lista-historico .quando { display: flex; align-items: center; gap: 10px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.lista-historico .quando { display: flex; align-items: center; gap: 10px; white-space: nowrap; font-weight: 700; font-variant-numeric: tabular-nums; }
 .lista-historico .quando svg { width: 22px; height: 22px; color: var(--tinta-suave); }
-.lista-historico .motivo { grid-column: 1 / -1; margin: 0; padding: 10px 14px; border-radius: 12px; background: var(--atrasado-fundo); color: var(--vermelho-escuro); overflow-wrap: anywhere; word-break: break-word; }
+.lista-historico .motivo { flex: 1 1 100%; margin: 0; padding: 10px 14px; border-radius: 12px; background: var(--atrasado-fundo); color: var(--vermelho-escuro); overflow-wrap: anywhere; word-break: break-word; }
 @media (max-width: 899px) {
   .sugestao-pasta { grid-template-columns: auto minmax(0, 1fr); }
   .sugestao-pasta .botao { grid-column: 1 / -1; width: 100%; }

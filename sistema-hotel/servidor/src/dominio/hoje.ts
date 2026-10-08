@@ -1,6 +1,7 @@
 import type { Banco } from '../banco/conexao.js';
 import { dataLocal, diasEntre, formatarData, horaParaMinutos, minutosDoDia } from './datas.js';
 import { formatarReais } from './dinheiro.js';
+import { nomeProprio } from './texto.js';
 
 // Tela "Hoje" (seção 5.1) e alertas (seção 7).
 
@@ -137,22 +138,22 @@ function alertas(
   }
 
   for (const p of h.preReservas) {
-    lista.push({ tipo: 'pre_reserva', cor: 'laranja', titulo: 'Pré-reserva aguardando Pix', texto: `${p.nome}, quarto ${p.quarto}.`, estadiaId: p.id, expiraEm: p.pre_reserva_expira_em ?? undefined });
+    lista.push({ tipo: 'pre_reserva', cor: 'laranja', titulo: 'Pré-reserva aguardando Pix', texto: `${nomeProprio(p.nome)}, quarto ${p.quarto}.`, estadiaId: p.id, expiraEm: p.pre_reserva_expira_em ?? undefined });
   }
 
   for (const s of h.saem) {
     if (s.saldo > 0) {
-      lista.push({ tipo: 'saida_com_saldo', cor: 'vermelho', titulo: 'Saindo com saldo em aberto', texto: `${s.nome} (quarto ${s.quarto}) ainda deve ${formatarReais(s.saldo)}.`, estadiaId: s.id });
+      lista.push({ tipo: 'saida_com_saldo', cor: 'vermelho', titulo: 'Saindo com saldo em aberto', texto: `${nomeProprio(s.nome)} (quarto ${s.quarto}) ainda deve ${formatarReais(s.saldo)}.`, estadiaId: s.id });
     }
     if (s.atrasada) {
-      lista.push({ tipo: 'saida_atrasada', cor: 'amarelo', titulo: 'Passou da hora da saída', texto: `Quarto ${s.quarto} (${s.nome}) ainda não foi liberado.`, estadiaId: s.id });
+      lista.push({ tipo: 'saida_atrasada', cor: 'amarelo', titulo: 'Passou da hora da saída', texto: `Quarto ${s.quarto} (${nomeProprio(s.nome)}) ainda não foi liberado.`, estadiaId: s.id });
     }
   }
 
   // Chegou com sinal e ainda tem saldo a cobrar (na chegada)
   for (const e of [...h.noHotel, ...h.saem]) {
     if (e.saldo > 0 && e.chegada_real_em && dataLocal(new Date(e.chegada_real_em)) === hoje && e.pago > 0 && e.data_saida > hoje) {
-      lista.push({ tipo: 'saldo_na_chegada', cor: 'amarelo', titulo: 'Chegou com saldo a cobrar', texto: `${e.nome} (quarto ${e.quarto}) pagou ${formatarReais(e.pago)} e falta ${formatarReais(e.saldo)}.`, estadiaId: e.id });
+      lista.push({ tipo: 'saldo_na_chegada', cor: 'amarelo', titulo: 'Chegou com saldo a cobrar', texto: `${nomeProprio(e.nome)} (quarto ${e.quarto}) pagou ${formatarReais(e.pago)} e falta ${formatarReais(e.saldo)}.`, estadiaId: e.id });
     }
   }
 

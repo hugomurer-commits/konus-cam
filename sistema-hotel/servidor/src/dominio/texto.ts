@@ -18,6 +18,17 @@ export function primeiraMaiuscula(s: string): string {
   return t.charAt(0).toLocaleUpperCase('pt-BR') + t.slice(1);
 }
 
+const MINUSCULAS = new Set(['de', 'da', 'do', 'das', 'dos', 'e']);
+/** Para mostrar: "HAZAEL FRANCISCO DOS SANTOS" → "Hazael Francisco dos Santos". Nome já com minúsculas fica como está. */
+export function nomeProprio(nome: string): string {
+  if (nome !== nome.toLocaleUpperCase('pt-BR')) return nome;
+  return nome
+    .toLocaleLowerCase('pt-BR')
+    .split(/(\s+)/)
+    .map((p, i) => (i > 0 && MINUSCULAS.has(p) ? p : p.charAt(0).toLocaleUpperCase('pt-BR') + p.slice(1)))
+    .join('');
+}
+
 /** Link do WhatsApp com DDI do Brasil quando o número vier só com DDD. */
 export function linkWhatsapp(telefone: string, mensagem?: string): string | null {
   let d = soDigitos(telefone);
