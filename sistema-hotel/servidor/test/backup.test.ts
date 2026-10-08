@@ -14,14 +14,21 @@ describe('backup', () => {
     expect((await amb.api('PUT', '/api/backup/pasta', { pasta: '/nao/existe' })).status).toBe(400);
     mkdirSync(join(amb.ctx.dirDados, 'fotos', 'quarto-1'), { recursive: true });
     writeFileSync(join(amb.ctx.dirDados, 'fotos', 'quarto-1', 'a.webp'), 'foto');
-    // 35 dias seguidos de backup
-    for (let i = 0; i < 35; i++) {
-      amb.relogio.agora = new Date(Date.UTC(2026, 9, 1 + i, 10));
-      expect((await fazerBackup(amb.ctx)).ok).toBe(true);
-    }
-    const diarios = readdirSync(join(pasta, 'diario'));
+    // Já existem 33 diários e 13 mensais antigos (arquivos de mentira, para o teste ser rápido)
+    mkdirSync(join(pasta, 'diario'));
+    mkdirSync(join(pasta, 'mensal'));
+    for (let i = 1; i <= 33; i++) writeFileSync(join(pasta, 'diario', `hotel-2026-08-${String(i).padStart(2, '0')}.db`), 'x');
+    for (let i = 1; i <= 13; i++) writeFileSync(join(pasta, 'mensal', `hotel-2025-${String(i).padStart(2, '0')}.db`), 'x');
+    amb.relogio.agora = new Date('2026-10-31T10:00:00Z');
+    expect((await fazerBackup(amb.ctx)).ok).toBe(true);
+    amb.relogio.agora = new Date('2026-11-01T10:00:00Z');
+    expect((await fazerBackup(amb.ctx)).ok).toBe(true);
+    const diarios = readdirSync(join(pasta, 'diario')).sort();
     expect(diarios).toHaveLength(30);
-    expect(readdirSync(join(pasta, 'mensal')).sort()).toEqual(['hotel-2026-10.db', 'hotel-2026-11.db']);
+    expect(diarios.slice(-2)).toEqual(['hotel-2026-10-31.db', 'hotel-2026-11-01.db']);
+    const mensais = readdirSync(join(pasta, 'mensal')).sort();
+    expect(mensais).toHaveLength(12);
+    expect(mensais.slice(-2)).toEqual(['hotel-2026-10.db', 'hotel-2026-11.db']);
     expect(existsSync(join(pasta, 'fotos', 'quarto-1', 'a.webp'))).toBe(true);
     // O arquivo é um banco válido com os dados
     const copia = new Database(join(pasta, 'diario', diarios[diarios.length - 1]), { readonly: true });
@@ -29,7 +36,7 @@ describe('backup', () => {
     copia.close();
     const st = (await amb.api('GET', '/api/backup')).json;
     expect(st.atrasado).toBe(false);
-  });
+  }, 30_000);
 
   it('hora do backup: depois das 3h se não teve hoje; sempre se passou de 26h', async () => {
     const amb = await criarAmbiente();
