@@ -1,0 +1,15 @@
+/* ===== Complementos da tela Hoje (o vocabulário principal está em app.css) ===== */
+
+/* Botões do aviso ("Abrir" / "Ver") ficam juntos na última coluna */
+.alerta .alerta-botoes { flex-wrap: nowrap; justify-content: flex-end; gap: 8px; }
+.alerta .alerta-botoes:empty { display: none; }
+
+/* "· 6 de 10 quartos" nunca se parte no meio */
+.ocupacao-texto span { white-space: nowrap; }
+
+@media (max-width: 899px) {
+  /* O resumo encosta nas bordas do cartão também no celular (o .cartao do celular devolvia o recuo) */
+  .cartao.resumo-dia { padding: 0; }
+  /* Se não couber numa linha, quebra antes do "·" */
+  .ocupacao-texto { white-space: normal; }
+}

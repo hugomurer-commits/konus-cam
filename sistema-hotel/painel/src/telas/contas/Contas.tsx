@@ -1,12 +1,36 @@
 import { useState } from 'react';
 import { NavLink, Route, Routes } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  AlarmClock,
+  CalendarCheck,
+  CalendarDays,
+  CalendarPlus,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  CircleAlert,
+  CircleCheck,
+  Clock,
+  Hourglass,
+  Info,
+  Landmark,
+  Pencil,
+  Plus,
+  Repeat,
+  TriangleAlert,
+  Undo2,
+  Users,
+  X,
+  type LucideIcon,
+} from 'lucide-react';
 import { api } from '../../api';
-import { CampoReais, Carregando, Dinheiro, Escolha, Etiqueta, MensagemErro, type Estado } from '../../componentes/Basicos';
+import { CampoReais, Carregando, ChipIcone, Dinheiro, Escolha, Etiqueta, MensagemErro, TituloTela, type Estado } from '../../componentes/Basicos';
 import { Janela, useInteracao } from '../../componentes/Interacao';
 import { data, dataCurta, emReais, FORMAS, GRUPOS, hojeLocal, nomeMes } from '../../formato';
-import { useCategorias } from '../caixa/LancarDespesa';
+import { FormaComIcone, Folhinha, ICONE_FORMA, maiuscula, useCategorias } from '../caixa/LancarDespesa';
 import { Funcionarias } from './Funcionarias';
+import '../../estilo/dinheiro.css';
 
 type Forma = 'pix' | 'cartao' | 'dinheiro' | 'boleto';
 
@@ -30,24 +54,39 @@ interface Conta {
   aPagar: number | null;
 }
 
-const ESTADOS: Record<Conta['estado'], { texto: string; estado: Estado }> = {
-  paga: { texto: 'Paga', estado: 'pago' },
-  atrasada: { texto: 'Atrasada', estado: 'atrasado' },
-  vence_hoje: { texto: 'Vence hoje', estado: 'sai' },
-  vence_breve: { texto: 'Vence em breve', estado: 'chega' },
-  aberta: { texto: 'Em aberto', estado: 'neutro' },
+/** Estado da conta: cor + ícone + texto (a folhinha e a linha usam a mesma classe). */
+const ESTADOS: Record<Conta['estado'], { texto: string; estado: Estado; icone: LucideIcon; classe: string }> = {
+  paga: { texto: 'Paga', estado: 'pago', icone: Check, classe: 'paga' },
+  atrasada: { texto: 'Atrasada', estado: 'atrasado', icone: TriangleAlert, classe: 'atrasada' },
+  vence_hoje: { texto: 'Vence hoje', estado: 'sai', icone: AlarmClock, classe: 'vence-hoje' },
+  vence_breve: { texto: 'Vence em breve', estado: 'chega', icone: Clock, classe: 'vence-breve' },
+  aberta: { texto: 'Em aberto', estado: 'neutro', icone: Hourglass, classe: 'aberta' },
 };
+
+function EtiquetaConta({ estado }: { estado: Conta['estado'] }) {
+  const e = ESTADOS[estado];
+  return (
+    <span className={`etiqueta est-${e.estado}`}>
+      <e.icone aria-hidden="true" />
+      {e.texto}
+    </span>
+  );
+}
+
+const ABAS = [
+  { para: '/contas', texto: 'Contas do mês', icone: CalendarDays, fim: true },
+  { para: '/contas/recorrentes', texto: 'Contas que se repetem', icone: Repeat },
+  { para: '/contas/funcionarias', texto: 'Funcionárias e vales', icone: Users },
+];
 
 export function Contas() {
   return (
-    <>
-      <nav className="abas" aria-label="Seções de contas">
-        {[
-          { para: '/contas', texto: 'Contas do mês', fim: true },
-          { para: '/contas/recorrentes', texto: 'Contas que se repetem' },
-          { para: '/contas/funcionarias', texto: 'Funcionárias e vales' },
-        ].map((a) => (
-          <NavLink key={a.para} to={a.para} end={a.fim} className={({ isActive }) => `botao${isActive ? ' selecionado' : ''}`}>
+    <div className="tela-dinheiro">
+      <TituloTela icone={CalendarCheck} tom="tom-contas" titulo="Contas" subtitulo="O que pagar, o que já foi pago, salários e vales." />
+      <nav className="abas abas-contas" aria-label="Seções de contas">
+        {ABAS.map((a) => (
+          <NavLink key={a.para} to={a.para} end={a.fim} className={({ isActive }) => `aba${isActive ? ' ativo' : ''}`}>
+            <a.icone aria-hidden="true" />
             {a.texto}
           </NavLink>
         ))}
@@ -57,7 +96,7 @@ export function Contas() {
         <Route path="recorrentes" element={<Recorrentes />} />
         <Route path="funcionarias" element={<Funcionarias />} />
       </Routes>
-    </>
+    </div>
   );
 }
 
@@ -65,6 +104,12 @@ function somarMes(mes: string, n: number) {
   const [a, m] = mes.split('-').map(Number);
   const t = a * 12 + (m - 1) + n;
   return `${Math.floor(t / 12)}-${String((t % 12) + 1).padStart(2, '0')}`;
+}
+
+/** 'AAAA-MM' → 'Setembro' (com o ano só quando muda de ano). */
+function nomeMesCurto(mes: string, referencia: string) {
+  const nome = maiuscula(nomeMes(mes));
+  return mes.slice(0, 4) === referencia.slice(0, 4) ? nome.replace(/ de \d{4}$/, '') : nome;
 }
 
 function ContasDoMes() {
@@ -82,6 +127,8 @@ function ContasDoMes() {
   const abertas = contas.filter((c) => c.status === 'aberta');
   const totalAberto = abertas.reduce((s, c) => s + (c.aPagar ?? c.valor_previsto ?? 0), 0);
   const totalPago = contas.filter((c) => c.status === 'paga').reduce((s, c) => s + (c.valor_pago ?? 0), 0);
+  const anterior = somarMes(mes, -1);
+  const proximo = somarMes(mes, 1);
 
   async function desfazer(c: Conta) {
     const ok = await confirmar({
@@ -110,75 +157,107 @@ function ContasDoMes() {
 
   return (
     <>
-      <div className="titulo-tela">
-        <div className="botoes">
-          <button className="botao" aria-label="Mês anterior" onClick={() => setMes(somarMes(mes, -1))}>
-            ←
+      <div className="barra-mes">
+        <div className="navegador">
+          <button className="botao" onClick={() => setMes(anterior)}>
+            <ChevronLeft aria-hidden="true" />
+            <span className="oculto-leitor">Mês anterior: </span>
+            {nomeMesCurto(anterior, mes)}
           </button>
-          <h1 style={{ margin: 0, minWidth: 240, textAlign: 'center' }}>{nomeMes(mes)}</h1>
-          <button className="botao" aria-label="Próximo mês" onClick={() => setMes(somarMes(mes, 1))}>
-            →
+          <h2 className="periodo" aria-live="polite">
+            {maiuscula(nomeMes(mes))}
+          </h2>
+          <button className="botao" onClick={() => setMes(proximo)}>
+            <span className="oculto-leitor">Próximo mês: </span>
+            {nomeMesCurto(proximo, mes)}
+            <ChevronRight aria-hidden="true" />
           </button>
         </div>
         <button className="botao principal" onClick={() => setNova(true)}>
-          + Conta avulsa
+          <Plus aria-hidden="true" />
+          Conta avulsa
         </button>
       </div>
-      <div className="grade-4">
-        <div className="numero-grande">
-          <div className="valor" style={{ color: 'var(--vermelho-alerta)' }}>
-            {emReais(totalAberto)}
+      <div className="resumo-contas">
+        <div className={`numero-grande ${abertas.length > 0 ? 'tom-perigo' : 'tom-config'}`}>
+          <ChipIcone icone={abertas.length > 0 ? CircleAlert : CircleCheck} />
+          <div>
+            <span className="valor">{emReais(totalAberto)}</span>
+            <span className="rotulo">A pagar ({abertas.length})</span>
           </div>
-          <div className="rotulo">A pagar ({abertas.length})</div>
         </div>
-        <div className="numero-grande">
-          <div className="valor" style={{ color: 'var(--verde-escuro)' }}>
-            {emReais(totalPago)}
+        <div className="numero-grande tom-caixa">
+          <ChipIcone icone={CircleCheck} />
+          <div>
+            <span className="valor">{emReais(totalPago)}</span>
+            <span className="rotulo">Já pago</span>
           </div>
-          <div className="rotulo">Já pago</div>
         </div>
       </div>
       {dados.isLoading && <Carregando />}
       <div className="cartao">
-        {contas.length === 0 && <p className="vazio">Nenhuma conta neste mês.</p>}
-        <ul className="lista">
+        {contas.length === 0 && !dados.isLoading && (
+          <p className="vazio">
+            <CircleCheck aria-hidden="true" />
+            Nenhuma conta neste mês.
+          </p>
+        )}
+        <ul className="lista lista-contas">
           {contas.map((c) => {
             const est = ESTADOS[c.estado];
             const valor = c.status === 'paga' ? c.valor_pago : c.aPagar ?? c.valor_previsto;
+            const paga = c.status === 'paga';
             return (
-              <li key={c.id}>
-                <div style={{ minWidth: 110 }}>
-                  <Etiqueta estado={est.estado}>{est.texto}</Etiqueta>
-                </div>
+              <li key={c.id} className={est.classe}>
+                <Folhinha data={paga ? c.data_pagamento ?? c.vencimento : c.vencimento} classe={est.classe} />
                 <div className="principal-item">
+                  <EtiquetaConta estado={c.estado} />
                   <div className="nome">{c.descricao}</div>
-                  <div className="suave pequeno">
-                    {c.status === 'paga'
-                      ? `Paga em ${data(c.data_pagamento)}${c.forma ? ` · ${FORMAS[c.forma]}` : ''}`
-                      : `Vence ${data(c.vencimento)}`}
+                  <div className="detalhe com-icone">
+                    {paga ? (
+                      <>
+                        Paga em {data(c.data_pagamento)}
+                        {c.forma && (
+                          <>
+                            {' · '}
+                            <FormaComIcone forma={c.forma} />
+                          </>
+                        )}
+                      </>
+                    ) : (
+                      `${c.estado === 'atrasada' ? 'Venceu' : 'Vence'} ${data(c.vencimento)}`
+                    )}
                     {c.competencia !== mes && ` · de ${nomeMes(c.competencia)}`}
                     {c.parcelas_restantes !== null && c.status === 'aberta' && ` · faltam ${c.parcelas_restantes} parcelas`}
-                    {c.funcionaria_id && c.vales.length > 0 && c.status === 'aberta' && ` · descontados ${c.vales.length} vales`}
+                    {c.funcionaria_id &&
+                      c.vales.length > 0 &&
+                      c.status === 'aberta' &&
+                      ` · ${c.vales.length === 1 ? 'descontado 1 vale' : `descontados ${c.vales.length} vales`}`}
                   </div>
                 </div>
-                <div style={{ textAlign: 'right' }}>
-                  {valor !== null ? <Dinheiro valor={valor} className="forte" /> : <span className="suave">variável</span>}
-                  {c.valor_variavel === 1 && c.status === 'aberta' && valor !== null && <div className="suave pequeno">mais ou menos</div>}
+                <div className="valor">
+                  {valor !== null ? <Dinheiro valor={valor} /> : <span className="variavel">variável</span>}
+                  {c.valor_variavel === 1 && c.status === 'aberta' && valor !== null && <span className="ajuste">mais ou menos</span>}
                 </div>
-                {c.status === 'aberta' ? (
-                  <>
-                    <button className="botao principal grande" onClick={() => setPagando(c)}>
-                      Paguei
+                <div className="acoes">
+                  {c.status === 'aberta' ? (
+                    <>
+                      <button className="botao principal grande" onClick={() => setPagando(c)}>
+                        <Check aria-hidden="true" />
+                        Paguei
+                      </button>
+                      <button className="botao pequeno sem-borda" onClick={() => tirar(c)}>
+                        <X aria-hidden="true" />
+                        Tirar
+                      </button>
+                    </>
+                  ) : (
+                    <button className="botao" onClick={() => desfazer(c)}>
+                      <Undo2 aria-hidden="true" />
+                      Desfazer
                     </button>
-                    <button className="botao pequeno sem-borda" onClick={() => tirar(c)}>
-                      Tirar
-                    </button>
-                  </>
-                ) : (
-                  <button className="botao pequeno" onClick={() => desfazer(c)}>
-                    Desfazer
-                  </button>
-                )}
+                  )}
+                </div>
               </li>
             );
           })}
@@ -202,11 +281,14 @@ function JanelaPaguei({ conta, aoFechar }: { conta: Conta; aoFechar: () => void 
     if (!valor) return setErro(new Error('Informe quanto pagou.'));
     const ok = await confirmar({
       titulo: 'Confirmar pagamento',
+      icone: CalendarCheck,
+      tom: 'tom-contas',
       mensagem: (
         <>
-          Paguei <strong>{conta.descricao}</strong>: <strong>{emReais(valor)}</strong> em {FORMAS[forma]}, dia {dataCurta(dia)}?
+          Paguei <strong>{conta.descricao}</strong>, dia {dataCurta(dia)}?
         </>
       ),
+      recibo: { valor: emReais(valor), detalhe: <FormaComIcone forma={forma} prefixo="em " /> },
     });
     if (!ok) return;
     try {
@@ -224,13 +306,21 @@ function JanelaPaguei({ conta, aoFechar }: { conta: Conta; aoFechar: () => void 
     }
   }
   return (
-    <Janela titulo={`Paguei: ${conta.descricao}`} aoFechar={aoFechar}>
+    <Janela titulo={`Paguei: ${conta.descricao}`} aoFechar={aoFechar} icone={CalendarCheck} tom="tom-contas">
       {conta.funcionaria_id && conta.vales.length > 0 && (
-        <p className="suave">
-          Salário menos {conta.vales.length} {conta.vales.length === 1 ? 'vale' : 'vales'} ({conta.vales.map((v) => `${dataCurta(v.data)}: ${emReais(v.valor)}`).join(', ')}).
+        <p className="dica">
+          <Info aria-hidden="true" />
+          <span>
+            Salário menos {conta.vales.length} {conta.vales.length === 1 ? 'vale' : 'vales'} ({conta.vales.map((v) => `${dataCurta(v.data)}: ${emReais(v.valor)}`).join(', ')}).
+          </span>
         </p>
       )}
-      {conta.valor_variavel === 1 && sugerido !== null && <p className="suave">Costuma ser perto de {emReais(sugerido)}. Digite o valor da conta.</p>}
+      {conta.valor_variavel === 1 && sugerido !== null && (
+        <p className="dica">
+          <Info aria-hidden="true" />
+          <span>Costuma ser perto de {emReais(sugerido)}. Digite o valor da conta.</span>
+        </p>
+      )}
       <CampoReais id="valor-paguei" rotulo="Valor pago" valor={valor} aoMudar={setValor} grande autoFocus />
       <div className="campo">
         <label htmlFor="dia-paguei">Dia do pagamento</label>
@@ -242,7 +332,7 @@ function JanelaPaguei({ conta, aoFechar }: { conta: Conta; aoFechar: () => void 
           rotulo="Forma"
           valor={forma}
           aoEscolher={setForma}
-          opcoes={(['pix', 'boleto', 'dinheiro', 'cartao'] as Forma[]).map((f) => ({ valor: f, texto: FORMAS[f] }))}
+          opcoes={(['pix', 'boleto', 'dinheiro', 'cartao'] as Forma[]).map((f) => ({ valor: f, texto: FORMAS[f], icone: ICONE_FORMA[f] }))}
         />
       </div>
       <MensagemErro erro={erro} />
@@ -251,6 +341,7 @@ function JanelaPaguei({ conta, aoFechar }: { conta: Conta; aoFechar: () => void 
           Voltar
         </button>
         <button className="botao grande principal" onClick={salvar}>
+          <Check aria-hidden="true" />
           Paguei {valor ? emReais(valor) : ''}
         </button>
       </div>
@@ -297,7 +388,7 @@ function JanelaContaAvulsa({ aoFechar }: { aoFechar: () => void }) {
     }
   }
   return (
-    <Janela titulo="Conta avulsa" aoFechar={aoFechar}>
+    <Janela titulo="Conta avulsa" aoFechar={aoFechar} icone={CalendarPlus} tom="tom-contas">
       <div className="campo">
         <label htmlFor="desc-avulsa">O que é</label>
         <input id="desc-avulsa" value={f.descricao} onChange={(e) => setF({ ...f, descricao: e.target.value })} placeholder="Ex.: IPTU 2026" autoFocus />
@@ -318,6 +409,7 @@ function JanelaContaAvulsa({ aoFechar }: { aoFechar: () => void }) {
           Voltar
         </button>
         <button className="botao grande principal" onClick={salvar}>
+          <Plus aria-hidden="true" />
           Adicionar
         </button>
       </div>
@@ -341,46 +433,95 @@ interface Recorrente {
   quitacao: string | null;
 }
 
+function LinhaRecorrente({ r, aoMudar }: { r: Recorrente; aoMudar: () => void }) {
+  const financiamento = r.parcelas_restantes !== null;
+  const quitado = financiamento && r.parcelas_restantes === 0;
+  return (
+    <li className={r.ativa ? '' : 'parada'}>
+      <Folhinha mes="dia" dia={r.dia_vencimento} classe={quitado ? 'paga' : ''} />
+      <div className="principal-item">
+        {!r.ativa && <Etiqueta estado="neutro">Parada</Etiqueta>}
+        {quitado && <Etiqueta estado="pago">Quitado</Etiqueta>}
+        <div className="nome">{r.nome}</div>
+        <div className="detalhe">
+          Dia {r.dia_vencimento} · {r.categoria}
+          {financiamento && !quitado && ` · faltam ${r.parcelas_restantes} parcelas`}
+        </div>
+        {financiamento && !quitado && r.quitacao && (
+          <div className="quitacao">
+            <CalendarCheck aria-hidden="true" />
+            Termina em {data(r.quitacao)}
+          </div>
+        )}
+        {r.obs && <div className="obs">{r.obs}</div>}
+      </div>
+      <div className="valor">
+        {r.valor_previsto !== null ? <Dinheiro valor={r.valor_previsto} /> : <span className="variavel">variável</span>}
+        {r.valor_variavel === 1 && r.valor_previsto !== null && <span className="ajuste">varia</span>}
+      </div>
+      <div className="acoes">
+        <button className="botao" onClick={aoMudar}>
+          <Pencil aria-hidden="true" />
+          Mudar
+        </button>
+      </div>
+    </li>
+  );
+}
+
 function Recorrentes() {
   const dados = useQuery({ queryKey: ['contas-recorrentes'], queryFn: () => api.get<{ recorrentes: Recorrente[] }>('/api/contas-recorrentes') });
   const [editando, setEditando] = useState<Recorrente | 'nova' | null>(null);
   if (dados.isLoading) return <Carregando />;
+  const todas = dados.data!.recorrentes;
+  const financiamentos = todas.filter((r) => r.parcelas_restantes !== null);
+  const fixas = todas.filter((r) => r.parcelas_restantes === null);
   return (
     <>
-      <div className="titulo-tela">
-        <h1>Contas que se repetem</h1>
+      <h2 className="oculto-leitor">Contas que se repetem</h2>
+      <div className="barra-acoes">
+        <p className="dica">
+          <Info aria-hidden="true" />
+          <span>Todo mês o sistema cria estas contas sozinho e avisa antes de vencer.</span>
+        </p>
         <button className="botao principal" onClick={() => setEditando('nova')}>
-          + Nova
+          <Plus aria-hidden="true" />
+          Nova
         </button>
       </div>
-      <p className="suave">Todo mês o sistema cria estas contas sozinho e avisa antes de vencer.</p>
-      <div className="cartao">
-        <ul className="lista">
-          {dados.data!.recorrentes.map((r) => (
-            <li key={r.id} style={r.ativa ? {} : { opacity: 0.6 }}>
-              <div className="principal-item">
-                <div className="nome">{r.nome}</div>
-                <div className="suave pequeno">
-                  Dia {r.dia_vencimento} · {r.categoria}
-                  {r.parcelas_restantes !== null &&
-                    (r.parcelas_restantes > 0
-                      ? ` · faltam ${r.parcelas_restantes} parcelas${r.quitacao ? `, termina em ${data(r.quitacao)}` : ''}`
-                      : ' · quitado')}
-                  {r.obs ? ` · ${r.obs}` : ''}
-                </div>
-              </div>
-              <div style={{ textAlign: 'right' }}>
-                {r.valor_previsto !== null ? <Dinheiro valor={r.valor_previsto} /> : <span className="suave">variável</span>}
-                {r.valor_variavel === 1 && r.valor_previsto !== null && <div className="suave pequeno">varia</div>}
-              </div>
-              {!r.ativa && <Etiqueta estado="neutro">Parada</Etiqueta>}
-              <button className="botao" onClick={() => setEditando(r)}>
-                Mudar
-              </button>
-            </li>
+      {financiamentos.length > 0 && (
+        <section className="cartao cartao-lista tom-ocupado">
+          <header className="cartao-topo">
+            <ChipIcone icone={Landmark} />
+            <h3>Financiamentos</h3>
+            <span className="contagem">{financiamentos.length}</span>
+          </header>
+          <p className="detalhe">Parcelas que faltam e quando cada um termina (previsão).</p>
+          <ul className="lista lista-contas">
+            {financiamentos.map((r) => (
+              <LinhaRecorrente key={r.id} r={r} aoMudar={() => setEditando(r)} />
+            ))}
+          </ul>
+        </section>
+      )}
+      <section className="cartao cartao-lista tom-contas">
+        <header className="cartao-topo">
+          <ChipIcone icone={Repeat} />
+          <h3>Contas de todo mês</h3>
+          <span className="contagem">{fixas.length}</span>
+        </header>
+        {fixas.length === 0 && (
+          <p className="vazio">
+            <CircleCheck aria-hidden="true" />
+            Nenhuma conta cadastrada.
+          </p>
+        )}
+        <ul className="lista lista-contas">
+          {fixas.map((r) => (
+            <LinhaRecorrente key={r.id} r={r} aoMudar={() => setEditando(r)} />
           ))}
         </ul>
-      </div>
+      </section>
       {editando && <JanelaRecorrente r={editando === 'nova' ? null : editando} aoFechar={() => setEditando(null)} />}
     </>
   );
@@ -416,7 +557,7 @@ function JanelaRecorrente({ r, aoFechar }: { r: Recorrente | null; aoFechar: () 
     }
   }
   return (
-    <Janela titulo={r ? `Mudar: ${r.nome}` : 'Nova conta que se repete'} aoFechar={aoFechar}>
+    <Janela titulo={r ? `Mudar: ${r.nome}` : 'Nova conta que se repete'} aoFechar={aoFechar} icone={r ? Pencil : Repeat} tom="tom-contas">
       <div className="campo">
         <label htmlFor="r-nome">Nome</label>
         <input id="r-nome" value={f.nome} onChange={(e) => setF({ ...f, nome: e.target.value })} />
@@ -465,6 +606,7 @@ function JanelaRecorrente({ r, aoFechar }: { r: Recorrente | null; aoFechar: () 
           Voltar
         </button>
         <button className="botao grande principal" onClick={salvar}>
+          <Check aria-hidden="true" />
           Salvar
         </button>
       </div>

@@ -1,11 +1,38 @@
 import { useState } from 'react';
 import { Link, Route, Routes, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  ArrowRight,
+  BedDouble,
+  Calendar1,
+  CalendarCheck,
+  CalendarDays,
+  CalendarRange,
+  ChartColumn,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp,
+  CircleCheck,
+  List,
+  Pencil,
+  PiggyBank,
+  Plus,
+  Receipt,
+  Scale,
+  TrendingDown,
+  TrendingUp,
+  Undo2,
+  UserRound,
+  Wallet,
+  type LucideIcon,
+} from 'lucide-react';
 import { api } from '../../api';
-import { Carregando, Dinheiro, Escolha, Etiqueta, MensagemErro } from '../../componentes/Basicos';
+import { Carregando, ChipIcone, Dinheiro, Etiqueta, MensagemErro, TituloTela } from '../../componentes/Basicos';
 import { useInteracao } from '../../componentes/Interacao';
-import { data, dataCurta, diaDaSemana, emReais, FORMAS, GRUPOS, hojeLocal, nomeMes, somarDias } from '../../formato';
-import { JanelaDespesa, LancarDespesa } from './LancarDespesa';
+import { data, dataCurta, diaDaSemana, emReais, FORMAS, GRUPOS, hojeLocal, nomeMes, nomeProprio, somarDias } from '../../formato';
+import { FormaComIcone, Folhinha, ICONE_FORMA, JanelaDespesa, LancarDespesa, maiuscula } from './LancarDespesa';
+import '../../estilo/dinheiro.css';
 
 type Modo = 'dia' | 'semana' | 'mes';
 
@@ -49,25 +76,96 @@ interface Resumo {
 
 export function Caixa() {
   return (
-    <Routes>
-      <Route index element={<ResumoCaixa />} />
-      <Route path="despesa" element={<LancarDespesa />} />
-    </Routes>
+    <div className="tela-dinheiro">
+      <Routes>
+        <Route index element={<ResumoCaixa />} />
+        <Route path="despesa" element={<LancarDespesa />} />
+      </Routes>
+    </div>
   );
 }
 
-function Resultado({ titulo, valor, explicacao }: { titulo: string; valor: number; explicacao: string }) {
-  const positivo = valor >= 0;
+/** Parte de um total, para a barrinha (0 a 100). */
+function pct(parte: number, total: number) {
+  if (!total || parte <= 0) return 0;
+  return Math.max(2, Math.min(100, Math.round((parte / total) * 100)));
+}
+
+function BarraValor({ parte, total }: { parte: number; total: number }) {
   return (
-    <div className="numero-grande" style={{ borderLeft: `8px solid ${positivo ? 'var(--verde-escuro)' : 'var(--vermelho-alerta)'}` }}>
-      <div className="rotulo forte" style={{ color: 'var(--tinta)' }}>
-        {titulo}
-      </div>
-      <div className="valor" style={{ color: positivo ? 'var(--verde-escuro)' : 'var(--vermelho-alerta)' }}>
-        {emReais(valor)}
-      </div>
-      <div className="rotulo pequeno">{explicacao}</div>
+    <div className="barra-valor" aria-hidden="true">
+      <span style={{ ['--pct' as string]: `${pct(parte, total)}%` }} />
     </div>
+  );
+}
+
+/** Um passo da cascata Entrou → Saiu → Sobrou. */
+function Cascata({ entrou, saiu, sobrou }: { entrou: number; saiu: number; sobrou: number }) {
+  const faltou = sobrou < 0;
+  return (
+    <div className="resultados">
+      <div className="resultado entrou">
+        <div className="titulo">
+          <TrendingUp aria-hidden="true" />
+          Entrou
+        </div>
+        <div className="valor">{emReais(entrou)}</div>
+        <div className="explica">Pagamentos das hospedagens (soma automática).</div>
+      </div>
+      <div className="resultado saiu">
+        <div className="titulo">
+          <TrendingDown aria-hidden="true" />
+          Saiu
+        </div>
+        <div className="valor">{emReais(saiu)}</div>
+        <div className="explica">Todas as despesas lançadas no período.</div>
+      </div>
+      <div className={`resultado${faltou ? ' negativo' : ''}`}>
+        <div className="titulo">
+          <PiggyBank aria-hidden="true" />
+          {faltou ? 'Faltou' : 'Sobrou'}
+        </div>
+        <div className="valor">{emReais(sobrou)}</div>
+        <div className="explica">{faltou ? 'Saiu mais dinheiro do que entrou.' : 'O que entrou menos o que saiu.'}</div>
+      </div>
+    </div>
+  );
+}
+
+/** Os três resultados da seção 5.4, nessa ordem, com explicação em uma linha. */
+function TresResultados({ r }: { r: Resumo }) {
+  const passos = [
+    { titulo: 'Resultado do hotel', valor: r.resultados.resultadoHotel, explicacao: 'Entradas menos os gastos de operação: mostra se o hotel dá lucro.' },
+    { titulo: 'Depois da obra e do financiamento', valor: r.resultados.depoisObra, explicacao: 'Tirando também obra, equipamentos e parcelas do Sicoob.' },
+    { titulo: 'O que sobrou de verdade', valor: r.resultados.sobrou, explicacao: 'Tirando também as compras da casa e as retiradas.' },
+  ];
+  return (
+    <section className="cartao cartao-lista tom-ocupado">
+      <header className="cartao-topo">
+        <ChipIcone icone={Scale} />
+        <h2>Resultados, passo a passo</h2>
+      </header>
+      <ol className="passos-resultado">
+        {passos.map((p, i) => (
+          <li key={p.titulo} className={p.valor < 0 ? 'negativo' : ''}>
+            <span className="numero-passo" aria-hidden="true">
+              {i + 1}
+            </span>
+            <div className="texto-passo">
+              <div className="nome-passo">
+                <span className="oculto-leitor">{i + 1}. </span>
+                {p.titulo}
+              </div>
+              <div className="detalhe">{p.explicacao}</div>
+            </div>
+            <div className="valor-passo">
+              <span className="dinheiro">{emReais(p.valor)}</span>
+              {p.valor < 0 ? <Etiqueta estado="atrasado">Faltou</Etiqueta> : <Etiqueta estado="pago">Sobrou</Etiqueta>}
+            </div>
+          </li>
+        ))}
+      </ol>
+    </section>
   );
 }
 
@@ -81,6 +179,12 @@ function variacao(atual: number, antes: number) {
     </Etiqueta>
   );
 }
+
+const MODOS: { valor: Modo; texto: string; icone: LucideIcon }[] = [
+  { valor: 'dia', texto: 'Dia', icone: Calendar1 },
+  { valor: 'semana', texto: 'Semana', icone: CalendarRange },
+  { valor: 'mes', texto: 'Mês', icone: CalendarDays },
+];
 
 function ResumoCaixa() {
   const navegar = useNavigate();
@@ -99,130 +203,143 @@ function ResumoCaixa() {
 
   return (
     <>
-      <div className="titulo-tela">
-        <h1>Caixa</h1>
+      <TituloTela icone={Wallet} tom="tom-caixa" titulo="Caixa" subtitulo="Quanto entrou, quanto saiu e quanto sobrou.">
         <button className="botao principal grande" onClick={() => navegar('/caixa/despesa')}>
-          + Lançar despesa
+          <Plus aria-hidden="true" />
+          Lançar despesa
         </button>
-      </div>
-      <div className="cartao">
-        <div className="botoes">
-          <Escolha
-            rotulo="Período"
-            grande={false}
-            valor={modo}
-            aoEscolher={setModo}
-            opcoes={[
-              { valor: 'dia', texto: 'Dia' },
-              { valor: 'semana', texto: 'Semana' },
-              { valor: 'mes', texto: 'Mês' },
-            ]}
-          />
-          <span style={{ flex: 1 }} />
+      </TituloTela>
+
+      <div className="barra-periodo">
+        <div className="abas" role="group" aria-label="Período">
+          {MODOS.map((m) => (
+            <button key={m.valor} type="button" className={`aba${modo === m.valor ? ' ativo' : ''}`} aria-pressed={modo === m.valor} onClick={() => setModo(m.valor)}>
+              <m.icone aria-hidden="true" />
+              {m.texto}
+            </button>
+          ))}
+        </div>
+        <div className="navegador">
           <button className="botao" aria-label="Período anterior" onClick={() => setRef(andar(modo, ref, -1))}>
-            ←
+            <ChevronLeft aria-hidden="true" />
+            Anterior
           </button>
-          <strong style={{ fontSize: '1.15rem', minWidth: 200, textAlign: 'center' }}>{p.titulo}</strong>
+          <h2 className="periodo" aria-live="polite">
+            {maiuscula(p.titulo)}
+          </h2>
           <button className="botao" aria-label="Próximo período" onClick={() => setRef(andar(modo, ref, 1))}>
-            →
+            Próximo
+            <ChevronRight aria-hidden="true" />
           </button>
-          <button className="botao" onClick={() => setRef(hojeLocal())}>
+          <button className="botao sem-borda" onClick={() => setRef(hojeLocal())}>
             Hoje
           </button>
         </div>
       </div>
+
       {dados.isLoading && <Carregando />}
       <MensagemErro erro={dados.error} />
       {r && (
         <>
-          <h2>Resultados</h2>
-          <div className="grade-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
-            <Resultado titulo="1. Resultado do hotel" valor={r.resultados.resultadoHotel} explicacao="Entradas menos os gastos de operação: mostra se o hotel dá lucro." />
-            <Resultado titulo="2. Depois da obra e do financiamento" valor={r.resultados.depoisObra} explicacao="Tirando também obra, equipamentos e parcelas do Sicoob." />
-            <Resultado titulo="3. O que sobrou de verdade" valor={r.resultados.sobrou} explicacao="Tirando também as compras da casa e as retiradas." />
-          </div>
+          <Cascata entrou={r.entradas} saiu={totalSaidas} sobrou={r.resultados.sobrou} />
+          <TresResultados r={r} />
 
           <div className="grade-2">
-            <div className="cartao">
-              <h2>
-                Entradas <Dinheiro valor={r.entradas} />
-              </h2>
-              <p className="suave pequeno">Soma automática dos pagamentos das hospedagens.</p>
-              <table className="tabela">
-                <tbody>
-                  {r.porForma.map((f) => (
-                    <tr key={f.forma}>
-                      <td>{FORMAS[f.forma]}</td>
-                      <td className="numero">
-                        <Dinheiro valor={f.total} />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              <h3 style={{ marginTop: 14 }}>Quem recebeu</h3>
-              <table className="tabela">
-                <tbody>
-                  {r.porConta.map((c) => (
-                    <tr key={c.sigla ?? 'nao'}>
-                      <td>{c.sigla ? `${c.sigla} · ${c.nome}` : c.nome}</td>
-                      <td className="numero">
-                        <Dinheiro valor={c.total} />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              <p className="pequeno" style={{ marginTop: 12 }}>
-                {r.ocupacao.diarias} diárias vendidas · {r.ocupacao.quartosNoite} quartos-noite ocupados
-                {r.ocupacao.capacidade > 0 && ` (${Math.round((r.ocupacao.quartosNoite / r.ocupacao.capacidade) * 100)}% de ocupação)`}
+            <section className="cartao cartao-lista tom-caixa">
+              <header className="cartao-topo">
+                <ChipIcone icone={TrendingUp} />
+                <h2>Entradas</h2>
+                <Dinheiro valor={r.entradas} className="total-topo" />
+              </header>
+              <p className="detalhe">Soma automática dos pagamentos das hospedagens.</p>
+              <h3 className="subtitulo-cartao">Por forma de pagamento</h3>
+              <ul className="lista-barras">
+                {r.porForma.map((f) => (
+                  <li key={f.forma}>
+                    <div className="linha">
+                      <span className="nome-item">
+                        <FormaComIcone forma={f.forma} />
+                      </span>
+                      <Dinheiro valor={f.total} />
+                    </div>
+                    <BarraValor parte={f.total} total={r.entradas} />
+                  </li>
+                ))}
+              </ul>
+              <h3 className="subtitulo-cartao">Quem recebeu</h3>
+              <ul className="lista-barras">
+                {r.porConta.map((c) => (
+                  <li key={c.sigla ?? 'nao'}>
+                    <div className="linha">
+                      <span className="nome-item">
+                        <UserRound aria-hidden="true" />
+                        {c.sigla ? `${c.sigla} · ${c.nome}` : c.nome}
+                      </span>
+                      <Dinheiro valor={c.total} />
+                    </div>
+                    <BarraValor parte={c.total} total={r.entradas} />
+                  </li>
+                ))}
+              </ul>
+              <p className="info-ocupacao">
+                <BedDouble aria-hidden="true" />
+                <span>
+                  {r.ocupacao.diarias} diárias vendidas · {r.ocupacao.quartosNoite} quartos-noite ocupados
+                  {r.ocupacao.capacidade > 0 && ` (${Math.round((r.ocupacao.quartosNoite / r.ocupacao.capacidade) * 100)}% de ocupação)`}
+                </span>
               </p>
-              <button className="botao pequeno" onClick={() => setVerEntradas(!verEntradas)}>
+              <button className="botao" onClick={() => setVerEntradas(!verEntradas)} aria-expanded={verEntradas}>
+                {verEntradas ? <ChevronUp aria-hidden="true" /> : <List aria-hidden="true" />}
                 {verEntradas ? 'Esconder pagamentos' : 'Ver cada pagamento'}
               </button>
               {verEntradas && <ListaEntradas de={p.de} ate={p.ate} />}
-            </div>
+            </section>
 
-            <div className="cartao">
-              <h2>
-                Saídas <Dinheiro valor={totalSaidas} />
-              </h2>
-              <table className="tabela">
-                <tbody>
-                  {Object.entries(GRUPOS).map(([g, titulo]) => {
-                    const cats = r.categorias.filter((c) => c.grupo === g);
-                    return [
-                      <tr key={g}>
-                        <td>
-                          {cats.length > 0 ? (
-                            <button className="botao pequeno sem-borda" onClick={() => setAbertos({ ...abertos, [g]: !abertos[g] })} aria-expanded={!!abertos[g]}>
-                              {abertos[g] ? '▾' : '▸'} {titulo}
-                            </button>
-                          ) : (
-                            <span style={{ paddingLeft: 20 }}>{titulo}</span>
-                          )}
-                        </td>
-                        <td className="numero forte">
-                          <Dinheiro valor={r.porGrupo[g] ?? 0} />
-                        </td>
-                      </tr>,
-                      ...(abertos[g]
-                        ? cats.map((c) => (
-                            <tr key={`c${c.id}`} className="pequeno">
-                              <td style={{ paddingLeft: 44 }}>
+            <section className="cartao cartao-lista tom-sai">
+              <header className="cartao-topo">
+                <ChipIcone icone={TrendingDown} />
+                <h2>Saídas</h2>
+                <Dinheiro valor={totalSaidas} className="total-topo" />
+              </header>
+              <p className="detalhe">Separadas por grupo. Abra um grupo para ver as categorias.</p>
+              <ul className="lista-barras">
+                {Object.entries(GRUPOS).map(([g, titulo]) => {
+                  const cats = r.categorias.filter((c) => c.grupo === g);
+                  const valor = r.porGrupo[g] ?? 0;
+                  return (
+                    <li key={g}>
+                      {cats.length > 0 ? (
+                        <button type="button" className="linha abre" onClick={() => setAbertos({ ...abertos, [g]: !abertos[g] })} aria-expanded={!!abertos[g]}>
+                          <span className="nome-item">
+                            {abertos[g] ? <ChevronDown aria-hidden="true" /> : <ChevronRight aria-hidden="true" />}
+                            {titulo}
+                          </span>
+                          <Dinheiro valor={valor} />
+                        </button>
+                      ) : (
+                        <div className="linha sem-itens">
+                          <span className="nome-item">{titulo}</span>
+                          <Dinheiro valor={valor} />
+                        </div>
+                      )}
+                      <BarraValor parte={valor} total={totalSaidas} />
+                      {abertos[g] && (
+                        <ul className="categorias">
+                          {cats.map((c) => (
+                            <li key={`c${c.id}`}>
+                              <span>
                                 {c.nome} <span className="suave">({c.lancamentos})</span>
-                              </td>
-                              <td className="numero">
-                                <Dinheiro valor={c.total} />
-                              </td>
-                            </tr>
-                          ))
-                        : []),
-                    ];
-                  })}
-                </tbody>
-              </table>
-            </div>
+                              </span>
+                              <Dinheiro valor={c.total} />
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
           </div>
 
           {modo === 'mes' && <Comparacao r={r} />}
@@ -236,63 +353,71 @@ function ResumoCaixa() {
 function Comparacao({ r }: { r: Resumo }) {
   const a = r.anterior;
   const mesAnt = nomeMes(a.de.slice(0, 7));
+  const topo = (
+    <header className="cartao-topo">
+      <ChipIcone icone={ChartColumn} />
+      <h2>Comparação com {mesAnt}</h2>
+    </header>
+  );
   if (a.faturamentoPlanilhaAntiga !== null) {
     return (
-      <div className="cartao">
-        <h2>Comparação com {mesAnt}</h2>
+      <section className="cartao cartao-lista tom-config">
+        {topo}
         <p>
           Faturamento de {mesAnt} (planilha antiga): <Dinheiro valor={a.faturamentoPlanilhaAntiga} className="forte" /> · este mês:{' '}
           <Dinheiro valor={r.entradas} className="forte" /> {variacao(r.entradas, a.faturamentoPlanilhaAntiga)}
         </p>
-      </div>
+      </section>
     );
   }
   return (
-    <div className="cartao">
-      <h2>Comparação com {mesAnt}</h2>
-      <table className="tabela">
-        <thead>
-          <tr>
-            <th></th>
-            <th className="numero">{mesAnt}</th>
-            <th className="numero">Agora</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Entradas</td>
-            <td className="numero">
-              <Dinheiro valor={a.entradas} />
-            </td>
-            <td className="numero">
-              <Dinheiro valor={r.entradas} />
-            </td>
-            <td>{variacao(r.entradas, a.entradas)}</td>
-          </tr>
-          <tr>
-            <td>Gastos de operação</td>
-            <td className="numero">
-              <Dinheiro valor={a.porGrupo.operacao} />
-            </td>
-            <td className="numero">
-              <Dinheiro valor={r.porGrupo.operacao} />
-            </td>
-            <td></td>
-          </tr>
-          <tr>
-            <td>Resultado do hotel</td>
-            <td className="numero">
-              <Dinheiro valor={a.resultados.resultadoHotel} />
-            </td>
-            <td className="numero">
-              <Dinheiro valor={r.resultados.resultadoHotel} />
-            </td>
-            <td>{variacao(r.resultados.resultadoHotel, a.resultados.resultadoHotel)}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    <section className="cartao cartao-lista tom-config">
+      {topo}
+      <div className="rolagem-x">
+        <table className="tabela">
+          <thead>
+            <tr>
+              <th></th>
+              <th className="numero">{maiuscula(mesAnt)}</th>
+              <th className="numero">Agora</th>
+              <th>Mudou</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">Entradas</th>
+              <td className="numero">
+                <Dinheiro valor={a.entradas} />
+              </td>
+              <td className="numero">
+                <Dinheiro valor={r.entradas} />
+              </td>
+              <td>{variacao(r.entradas, a.entradas)}</td>
+            </tr>
+            <tr>
+              <th scope="row">Gastos de operação</th>
+              <td className="numero">
+                <Dinheiro valor={a.porGrupo.operacao} />
+              </td>
+              <td className="numero">
+                <Dinheiro valor={r.porGrupo.operacao} />
+              </td>
+              <td></td>
+            </tr>
+            <tr>
+              <th scope="row">Resultado do hotel</th>
+              <td className="numero">
+                <Dinheiro valor={a.resultados.resultadoHotel} />
+              </td>
+              <td className="numero">
+                <Dinheiro valor={r.resultados.resultadoHotel} />
+              </td>
+              <td>{variacao(r.resultados.resultadoHotel, a.resultados.resultadoHotel)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
   );
 }
 
@@ -338,47 +463,70 @@ function ListaDespesas({ de, ate }: { de: string; ate: string }) {
     }
   }
   return (
-    <div className="cartao">
-      <h2>Despesas lançadas ({lista.filter((d) => !d.cancelado_em).length})</h2>
-      {lista.length === 0 && <p className="vazio">Nenhuma despesa no período.</p>}
-      <ul className="lista">
+    <section className="cartao cartao-lista tom-caixa">
+      <header className="cartao-topo">
+        <ChipIcone icone={Receipt} />
+        <h2>Despesas lançadas</h2>
+        <span className="contagem" aria-label={`${lista.filter((d) => !d.cancelado_em).length} despesas`}>
+          {lista.filter((d) => !d.cancelado_em).length}
+        </span>
+      </header>
+      {lista.length === 0 && (
+        <p className="vazio">
+          <CircleCheck aria-hidden="true" />
+          Nenhuma despesa no período.
+        </p>
+      )}
+      <ul className="lista lista-contas lista-despesas">
         {lista.slice(0, 200).map((d) => (
-          <li key={d.id} style={d.cancelado_em ? { opacity: 0.55 } : {}}>
+          <li key={d.id} className={d.cancelado_em ? 'desfeita' : ''}>
+            <Folhinha data={d.data} />
             <div className="principal-item">
-              <div className="nome" style={d.cancelado_em ? { textDecoration: 'line-through' } : {}}>
+              <div className="nome">
                 {d.categoria}
                 {d.fornecedor ? ` · ${d.fornecedor}` : ''}
               </div>
-              <div className="suave pequeno">
-                {dataCurta(d.data)} · {FORMAS[d.forma]}
+              <div className="detalhe com-icone">
+                <span className="oculto-leitor">{data(d.data)} · </span>
+                <FormaComIcone forma={d.forma} />
                 {d.descricao ? ` · ${d.descricao}` : ''}
                 {d.conta_a_pagar_id ? ' · conta paga' : ''}
               </div>
             </div>
-            <Dinheiro valor={d.valor} className="forte" />
-            {d.cancelado_em ? (
-              <Etiqueta estado="neutro">Desfeita</Etiqueta>
-            ) : (
-              <>
-                {!d.vale_id && (
-                  <button className="botao pequeno" onClick={() => setEditando(d)}>
-                    Mudar
+            <div className="valor">
+              <Dinheiro valor={d.valor} />
+            </div>
+            <div className="acoes">
+              {d.cancelado_em ? (
+                <Etiqueta estado="neutro">Desfeita</Etiqueta>
+              ) : (
+                <>
+                  {!d.vale_id && (
+                    <button className="botao pequeno" onClick={() => setEditando(d)}>
+                      <Pencil aria-hidden="true" />
+                      Mudar
+                    </button>
+                  )}
+                  <button className="botao pequeno" onClick={() => desfazer(d)}>
+                    <Undo2 aria-hidden="true" />
+                    Desfazer
                   </button>
-                )}
-                <button className="botao pequeno" onClick={() => desfazer(d)}>
-                  Desfazer
-                </button>
-              </>
-            )}
+                </>
+              )}
+            </div>
           </li>
         ))}
       </ul>
       {lista.length > 200 && <p className="suave">Mostrando as 200 mais recentes. Escolha um período menor para ver as outras.</p>}
       {editando && <JanelaDespesa despesa={editando} aoFechar={() => setEditando(null)} />}
-      <p style={{ marginTop: 8 }}>
-        <Link to="/contas">Contas a pagar →</Link>
+      <p className="rodape-cartao">
+        <Link to="/contas" className="botao sem-borda">
+          <CalendarCheck aria-hidden="true" />
+          Contas a pagar
+          <ArrowRight aria-hidden="true" />
+        </Link>
       </p>
-    </div>
+    </section>
   );
 }
 
@@ -391,19 +539,25 @@ function ListaEntradas({ de, ate }: { de: string; ate: string }) {
       ),
   });
   return (
-    <ul className="lista">
-      {(dados.data?.entradas ?? []).slice(0, 200).map((e) => (
-        <li key={e.id}>
-          <div className="principal-item">
-            <Link to={`/estadia/${e.estadia_id}`}>{e.nome}</Link>
-            <div className="suave pequeno">
-              {dataCurta(e.data)} · quarto {e.quarto} · {FORMAS[e.forma]}
-              {e.conta ? ` · ${e.conta}` : ''}
+    <ul className="lista lista-entradas">
+      {(dados.data?.entradas ?? []).slice(0, 200).map((e) => {
+        const Icone = ICONE_FORMA[e.forma];
+        return (
+          <li key={e.id}>
+            <div className="principal-item">
+              <Link to={`/estadia/${e.estadia_id}`} className="nome">
+                {nomeProprio(e.nome)}
+              </Link>
+              <div className="detalhe com-icone">
+                {dataCurta(e.data)} · quarto {e.quarto} · {Icone && <Icone aria-hidden="true" />}
+                {FORMAS[e.forma]}
+                {e.conta ? ` · ${e.conta}` : ''}
+              </div>
             </div>
-          </div>
-          <Dinheiro valor={e.valor} />
-        </li>
-      ))}
+            <Dinheiro valor={e.valor} className="forte" />
+          </li>
+        );
+      })}
     </ul>
   );
 }

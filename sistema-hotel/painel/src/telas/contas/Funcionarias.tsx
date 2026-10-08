@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Check, CircleCheck, HandCoins, Info, Pencil, Plus, Undo2, UserPlus, UserRound } from 'lucide-react';
 import { api } from '../../api';
-import { CampoReais, Carregando, Dinheiro, Escolha, Etiqueta, MensagemErro } from '../../componentes/Basicos';
+import { CampoReais, Carregando, ChipIcone, Dinheiro, Escolha, Etiqueta, MensagemErro } from '../../componentes/Basicos';
 import { Janela, useInteracao } from '../../componentes/Interacao';
 import { data, dataCurta, emReais, FORMAS, hojeLocal } from '../../formato';
+import { FormaComIcone, Folhinha, ICONE_FORMA } from '../caixa/LancarDespesa';
+import '../../estilo/dinheiro.css';
 
 interface Funcionaria {
   id: number;
@@ -39,62 +42,106 @@ export function Funcionarias() {
 
   return (
     <>
-      <div className="titulo-tela">
-        <h1>Funcionárias e vales</h1>
+      <h2 className="oculto-leitor">Funcionárias e vales</h2>
+      <div className="barra-acoes">
+        <p className="dica">
+          <Info aria-hidden="true" />
+          <span>O vale entra no caixa na hora. No dia do pagamento, a conta do salário em Contas já vem com os vales descontados.</span>
+        </p>
         <button className="botao principal" onClick={() => setEditando('nova')}>
-          + Funcionária
+          <Plus aria-hidden="true" />
+          Funcionária
         </button>
       </div>
-      <p className="suave">
-        O vale entra no caixa na hora. No dia do pagamento, a conta do salário em Contas já vem com os vales descontados.
-      </p>
       {lista.length === 0 && (
         <div className="cartao">
-          <p className="vazio">Nenhuma funcionária cadastrada.</p>
+          <p className="vazio">
+            <CircleCheck aria-hidden="true" />
+            Nenhuma funcionária cadastrada.
+          </p>
         </div>
       )}
       <div className="grade-2">
         {lista.map((f) => (
-          <div key={f.id} className="cartao" style={f.ativa ? {} : { opacity: 0.6 }}>
-            <div className="titulo-tela" style={{ marginBottom: 8 }}>
-              <h2 style={{ margin: 0 }}>{f.nome}</h2>
+          <section key={f.id} className={`cartao cartao-lista tom-contas funcionaria${f.ativa ? '' : ' parada'}`}>
+            <header className="cartao-topo">
+              <ChipIcone icone={UserRound} />
+              <h3>{f.nome}</h3>
               {!f.ativa && <Etiqueta estado="neutro">Saiu</Etiqueta>}
-            </div>
-            <p>
-              Salário <Dinheiro valor={f.salario} className="forte" /> · paga dia {f.dia_pagamento}
-            </p>
-            <p className="suave pequeno">
+            </header>
+            <p className="detalhe">Salário pago todo dia {f.dia_pagamento}.</p>
+            <table className="tabela contracheque">
+              <tbody>
+                <tr>
+                  <th scope="row">Salário</th>
+                  <td className="numero">
+                    <Dinheiro valor={f.salario} />
+                  </td>
+                </tr>
+                <tr>
+                  <th scope="row">
+                    Vales ({f.vales.length})
+                  </th>
+                  <td className="numero">
+                    {f.totalVales > 0 ? '− ' : ''}
+                    <Dinheiro valor={f.totalVales} />
+                  </td>
+                </tr>
+              </tbody>
+              <tfoot>
+                <tr>
+                  <th scope="row">A pagar no dia {f.dia_pagamento}</th>
+                  <td className="numero">
+                    <Dinheiro valor={f.saldo} />
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+            <h4 className="subtitulo-cartao">
               Vales de {dataCurta(f.periodo.de)} a {dataCurta(f.periodo.ate)} (pagamento em {data(f.proximoPagamento)}):
-            </p>
-            {f.vales.length === 0 && <p className="vazio">Nenhum vale.</p>}
-            <ul className="lista">
+            </h4>
+            {f.vales.length === 0 && (
+              <p className="vazio">
+                <CircleCheck aria-hidden="true" />
+                Nenhum vale.
+              </p>
+            )}
+            <ul className="lista lista-contas lista-vales">
               {f.vales.map((v) => (
                 <li key={v.id}>
+                  <Folhinha data={v.data} />
                   <div className="principal-item">
-                    {dataCurta(v.data)} · {FORMAS[v.forma]}
-                    {v.obs ? ` · ${v.obs}` : ''}
+                    <div className="nome com-icone">
+                      <span className="oculto-leitor">{data(v.data)} · </span>
+                      <FormaComIcone forma={v.forma} />
+                    </div>
+                    {v.obs && <div className="detalhe">{v.obs}</div>}
                   </div>
-                  <Dinheiro valor={v.valor} />
-                  <button className="botao pequeno" onClick={() => desfazerVale(f, v)}>
-                    Desfazer
-                  </button>
+                  <div className="valor">
+                    <Dinheiro valor={v.valor} />
+                  </div>
+                  <div className="acoes">
+                    <button className="botao pequeno" onClick={() => desfazerVale(f, v)}>
+                      <Undo2 aria-hidden="true" />
+                      Desfazer
+                    </button>
+                  </div>
                 </li>
               ))}
             </ul>
-            <p style={{ fontSize: '1.15rem' }}>
-              A pagar no dia {f.dia_pagamento}: <Dinheiro valor={f.saldo} className="forte" />
-            </p>
-            <div className="botoes">
+            <div className="botoes acoes-funcionaria">
               {f.ativa && (
                 <button className="botao principal grande" onClick={() => setVale(f)}>
-                  + Vale
+                  <Plus aria-hidden="true" />
+                  Vale
                 </button>
               )}
               <button className="botao" onClick={() => setEditando(f)}>
+                <Pencil aria-hidden="true" />
                 Mudar
               </button>
             </div>
-          </div>
+          </section>
         ))}
       </div>
       {vale && <JanelaVale f={vale} aoFechar={() => setVale(null)} />}
@@ -115,11 +162,14 @@ function JanelaVale({ f, aoFechar }: { f: Funcionaria; aoFechar: () => void }) {
     if (!valor) return setErro(new Error('Informe o valor do vale.'));
     const ok = await confirmar({
       titulo: 'Confirmar vale',
+      icone: HandCoins,
+      tom: 'tom-caixa',
       mensagem: (
         <>
-          Vale de <strong>{emReais(valor)}</strong> em {FORMAS[forma]} para <strong>{f.nome}</strong>?
+          Vale para <strong>{f.nome}</strong>, dia {dataCurta(dia)}?
         </>
       ),
+      recibo: { valor: emReais(valor), detalhe: <FormaComIcone forma={forma} prefixo="em " /> },
     });
     if (!ok) return;
     try {
@@ -137,11 +187,11 @@ function JanelaVale({ f, aoFechar }: { f: Funcionaria; aoFechar: () => void }) {
     }
   }
   return (
-    <Janela titulo={`Vale para ${f.nome}`} aoFechar={aoFechar}>
+    <Janela titulo={`Vale para ${f.nome}`} aoFechar={aoFechar} icone={HandCoins} tom="tom-caixa">
       <CampoReais id="valor-vale" rotulo="Valor" valor={valor} aoMudar={setValor} grande autoFocus />
       <div className="campo">
         <span className="rotulo">Como deu</span>
-        <Escolha rotulo="Forma" valor={forma} aoEscolher={setForma} opcoes={(['dinheiro', 'pix'] as Forma[]).map((x) => ({ valor: x, texto: FORMAS[x] }))} />
+        <Escolha rotulo="Forma" valor={forma} aoEscolher={setForma} opcoes={(['dinheiro', 'pix'] as Forma[]).map((x) => ({ valor: x, texto: FORMAS[x], icone: ICONE_FORMA[x] }))} />
       </div>
       <div className="campo">
         <label htmlFor="dia-vale">Dia</label>
@@ -157,6 +207,7 @@ function JanelaVale({ f, aoFechar }: { f: Funcionaria; aoFechar: () => void }) {
           Voltar
         </button>
         <button className="botao grande principal" onClick={salvar}>
+          <HandCoins aria-hidden="true" />
           Dar vale
         </button>
       </div>
@@ -182,7 +233,7 @@ function JanelaFuncionaria({ f, aoFechar }: { f: Funcionaria | null; aoFechar: (
     }
   }
   return (
-    <Janela titulo={f ? `Mudar: ${f.nome}` : 'Nova funcionária'} aoFechar={aoFechar}>
+    <Janela titulo={f ? `Mudar: ${f.nome}` : 'Nova funcionária'} aoFechar={aoFechar} icone={f ? Pencil : UserPlus} tom="tom-contas">
       <div className="campo">
         <label htmlFor="f-nome">Nome</label>
         <input id="f-nome" value={form.nome} onChange={(e) => setForm({ ...form, nome: e.target.value })} autoFocus />
@@ -204,6 +255,7 @@ function JanelaFuncionaria({ f, aoFechar }: { f: Funcionaria | null; aoFechar: (
           Voltar
         </button>
         <button className="botao grande principal" onClick={salvar}>
+          <Check aria-hidden="true" />
           Salvar
         </button>
       </div>

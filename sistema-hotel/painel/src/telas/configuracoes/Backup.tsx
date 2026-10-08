@@ -1,8 +1,23 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  ArrowRight,
+  CalendarClock,
+  CircleDashed,
+  Cloud,
+  CloudUpload,
+  DatabaseBackup,
+  Eye,
+  FolderOpen,
+  History,
+  ListChecks,
+  Save,
+  ShieldAlert,
+  ShieldCheck,
+} from 'lucide-react';
 import { api } from '../../api';
-import { Carregando, Etiqueta, MensagemErro } from '../../componentes/Basicos';
+import { Carregando, ChipIcone, Etiqueta, MensagemErro } from '../../componentes/Basicos';
 import { useInteracao } from '../../componentes/Interacao';
 import { dataHora } from '../../formato';
 
@@ -52,69 +67,93 @@ export function ConfigBackup() {
   const d = dados.data!;
   return (
     <>
-      <div className="cartao" style={{ borderLeft: `8px solid ${d.atrasado ? 'var(--vermelho-alerta)' : 'var(--verde-escuro)'}` }}>
-        <h2>
-          Último backup:{' '}
+      <section className={`cartao cartao-lista estado-backup ${d.atrasado || !d.ultimo ? 'tom-perigo' : 'tom-livre'}`}>
+        <header className="cartao-topo">
+          <ChipIcone icone={d.atrasado || !d.ultimo ? ShieldAlert : ShieldCheck} tom={d.atrasado || !d.ultimo ? 'tom-perigo' : 'tom-livre'} />
+          <h2>Último backup:</h2>
           {d.ultimo ? (
             <Etiqueta estado={d.atrasado ? 'atrasado' : 'pago'}>{dataHora(d.ultimo)}</Etiqueta>
           ) : (
             <Etiqueta estado="atrasado">nunca</Etiqueta>
           )}
-        </h2>
+        </header>
         <p>
           O sistema faz backup sozinho todo dia às 3h da manhã (ou assim que o computador ligar, se estava desligado). Guarda os
           últimos {d.manter.diarios} dias e {d.manter.mensais} meses.
         </p>
         <MensagemErro erro={agora.error} />
         <button className="botao principal grande" disabled={agora.isPending} onClick={() => agora.mutate()}>
+          <DatabaseBackup aria-hidden="true" />
           {agora.isPending ? 'Fazendo backup…' : 'Fazer backup agora'}
         </button>
-      </div>
+      </section>
       {d.sugestoes.length > 0 && d.sugestoes[0] !== d.pasta && (
-        <div className="cartao">
-          <h2>Achei o Google Drive neste computador</h2>
-          {d.sugestoes.map((s) => (
-            <div key={s} className="botoes" style={{ marginBottom: 8 }}>
-              <code style={{ flex: 1 }}>{s}</code>
-              <button className="botao principal grande" disabled={salvarPasta.isPending} onClick={() => salvarPasta.mutate(s)}>
-                Guardar o backup aqui
-              </button>
-            </div>
-          ))}
-        </div>
+        <section className="cartao">
+          <header className="cartao-topo">
+            <ChipIcone icone={Cloud} tom="tom-ocupado" />
+            <h2>Achei o Google Drive neste computador</h2>
+          </header>
+          <p className="apoio">Guardando o backup numa pasta do Drive, ele vai para a nuvem sozinho.</p>
+          <div className="sugestoes-pasta">
+            {d.sugestoes.map((s) => (
+              <div key={s} className="sugestao-pasta">
+                <ChipIcone icone={Cloud} tom="tom-ocupado" />
+                <div className="onde">
+                  <span className="rotulo">Pasta do Google Drive</span>
+                  <code className="caminho">{s}</code>
+                </div>
+                <button className="botao principal grande" disabled={salvarPasta.isPending} onClick={() => salvarPasta.mutate(s)}>
+                  <CloudUpload aria-hidden="true" />
+                  Guardar o backup aqui
+                </button>
+              </div>
+            ))}
+          </div>
+        </section>
       )}
-      <div className="cartao">
-        <h2>Onde guardar</h2>
+      <section className="cartao">
+        <header className="cartao-topo">
+          <ChipIcone icone={FolderOpen} tom="tom-chega" />
+          <h2>Onde guardar</h2>
+        </header>
         <p>
           Escolha uma pasta do <strong>Google Drive para computador</strong> (no modo "espelhar arquivos"), assim cada backup vai
-          para a nuvem sozinho. Exemplo: <code>C:\Users\Hotel\Meu Drive\Backup Hotel</code>
+          para a nuvem sozinho. Exemplo: <code className="caminho">C:\Users\Hotel\Meu Drive\Backup Hotel</code>
         </p>
         <div className="campo">
           <label htmlFor="pasta-backup">Pasta do backup</label>
           <input id="pasta-backup" value={pasta} placeholder={d.pastaPadrao} onChange={(e) => setPasta(e.target.value)} />
-          <span className="ajuda">Vazio = guarda só neste computador ({d.pastaPadrao}). Não protege se o computador estragar.</span>
+          <span className="ajuda ajuda-quebra">Vazio = guarda só neste computador ({d.pastaPadrao}). Não protege se o computador estragar.</span>
         </div>
         <MensagemErro erro={salvarPasta.error} />
         <button className="botao" onClick={() => salvarPasta.mutate(undefined)}>
+          <Save aria-hidden="true" />
           Salvar pasta
         </button>
-      </div>
-      <div className="cartao">
-        <h2>Últimas tentativas</h2>
-        <ul className="lista">
+      </section>
+      <section className="cartao">
+        <header className="cartao-topo">
+          <ChipIcone icone={History} tom="tom-config" />
+          <h2>Últimas tentativas</h2>
+        </header>
+        <ul className="lista-historico">
           {d.historico.map((h, i) => (
             <li key={i}>
-              <span className="principal-item">{dataHora(h.feito_em)}</span>
+              <span className="quando">
+                <CalendarClock aria-hidden="true" />
+                {dataHora(h.feito_em)}
+              </span>
               {h.ok ? (
                 <Etiqueta estado="pago">Deu certo{h.tamanho ? ` · ${(h.tamanho / 1024 / 1024).toFixed(1)} MB` : ''}</Etiqueta>
               ) : (
-                <Etiqueta estado="atrasado">Falhou: {h.erro}</Etiqueta>
+                <Etiqueta estado="atrasado">Falhou</Etiqueta>
               )}
+              {!h.ok && h.erro && <p className="motivo">{h.erro}</p>}
             </li>
           ))}
           {d.historico.length === 0 && <li className="vazio">Nenhum backup ainda.</li>}
         </ul>
-      </div>
+      </section>
     </>
   );
 }
@@ -151,28 +190,54 @@ export function PrimeirosPassos() {
       link: '/quartos/editar',
     },
   ];
+  const feitos = passos.filter((p) => p.feito).length;
   return (
-    <div className="cartao">
-      <h2>Primeiros passos</h2>
-      <ul className="lista">
+    <section className="cartao">
+      <header className="cartao-topo">
+        <ChipIcone icone={ListChecks} tom="tom-hoje" />
+        <h2>Primeiros passos</h2>
+      </header>
+      <div className="progresso-passos">
+        <span className="texto">
+          {feitos} de {passos.length} passos feitos
+        </span>
+        <span className="barra-valor" aria-hidden="true">
+          <span style={{ '--pct': `${(feitos / passos.length) * 100}%` } as CSSProperties} />
+        </span>
+      </div>
+      <ol className="lista-passos">
         {passos.map((p, i) => (
-          <li key={p.titulo}>
-            <div className="principal-item">
-              <div className="nome">
-                {i + 1}. {p.titulo}
+          <li key={p.titulo} className={p.feito ? 'feito' : 'pendente'}>
+            <span className="passo-circulo" aria-hidden="true">
+              {i + 1}
+            </span>
+            <div className="passo-texto">
+              <div className="passo-titulo">
+                {p.titulo}
+                {p.feito ? (
+                  <Etiqueta estado="pago">Feito</Etiqueta>
+                ) : (
+                  <span className="etiqueta est-chega">
+                    <CircleDashed aria-hidden="true" />
+                    Falta
+                  </span>
+                )}
               </div>
-              <div className="suave">{p.texto}</div>
+              <p className="suave">{p.texto}</p>
             </div>
-            {p.feito ? <Etiqueta estado="pago">Feito</Etiqueta> : <Etiqueta estado="chega">Falta</Etiqueta>}
-            <Link to={p.link} className="botao">
+            <Link to={p.link} className={`botao${p.feito ? '' : ' principal'}`}>
+              {p.feito ? <Eye aria-hidden="true" /> : <ArrowRight aria-hidden="true" />}
               {p.feito ? 'Ver' : 'Fazer'}
             </Link>
           </li>
         ))}
-      </ul>
-      <p className="suave" style={{ marginTop: 12 }}>
-        Depois disso, é só usar a tela <Link to="/">Hoje</Link>.
+      </ol>
+      <p className="passos-fim">
+        <span className="sol-logo" aria-hidden="true" />
+        <span>
+          Depois disso, é só usar a tela <Link to="/">Hoje</Link>.
+        </span>
       </p>
-    </div>
+    </section>
   );
 }

@@ -1,0 +1,179 @@
+/* ===== Caixa e Contas: complementos do visual "Resort tropical" (só tokens de app.css) =====
+   Tudo fica dentro de .tela-dinheiro para não vazar para outras telas. */
+
+/* ---- Utilitários ---- */
+.tela-dinheiro .detalhe { color: var(--tinta-suave); }
+.tela-dinheiro .com-icone svg, .tela-dinheiro .icone-texto { width: 18px; height: 18px; vertical-align: -3px; margin-right: 4px; color: var(--tinta-suave); }
+.tela-dinheiro .cartao-topo h3 { margin: 0; font-size: var(--fs-h3); flex: 1; min-width: 0; }
+.tela-dinheiro .cartao-topo .total-topo { font-size: var(--fs-h3); font-weight: 700; color: var(--tom-texto, var(--tinta)); }
+.tela-dinheiro .cartao-lista > .detalhe { margin: 0 0 8px; }
+.tela-dinheiro .subtitulo-cartao { font-size: var(--fs-base); font-weight: 700; color: var(--tinta); margin: 18px 0 4px; }
+.tela-dinheiro .vazio svg { flex-shrink: 0; }
+
+/* Dica / explicação com ícone */
+.tela-dinheiro .dica {
+  display: flex; align-items: flex-start; gap: 12px; margin: 0 0 20px; padding: 12px 16px;
+  border-radius: var(--raio); background: var(--azul-espuma); border: 1px solid var(--azul-bruma); color: var(--tinta);
+}
+.tela-dinheiro .dica > svg { width: 24px; height: 24px; margin-top: 1px; color: var(--azul-escuro); }
+.tela-dinheiro .dica .icone-texto { color: var(--azul-escuro); }
+
+/* Linha "dica à esquerda + botão à direita" (Contas que se repetem, Funcionárias) */
+.tela-dinheiro .barra-acoes { display: flex; align-items: center; gap: 12px 20px; margin-bottom: 20px; }
+.tela-dinheiro .barra-acoes .dica { flex: 1; margin: 0; }
+
+/* ---- Abas ---- */
+.tela-dinheiro button.aba { background: transparent; cursor: pointer; font-size: var(--fs-base); }
+.tela-dinheiro .aba svg { width: 22px; height: 22px; }
+
+/* ---- Navegação de período ---- */
+.tela-dinheiro .navegador .periodo { margin: 0; }
+.tela-dinheiro .barra-periodo { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px 20px; margin-bottom: 20px; }
+.tela-dinheiro .barra-periodo .abas { margin-bottom: 0; }
+.tela-dinheiro .barra-periodo .navegador .periodo { min-width: 250px; }
+.tela-dinheiro .barra-mes { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px 16px; margin-bottom: 20px; }
+
+/* ---- Caixa: cascata Entrou → Saiu → Sobrou ---- */
+.tela-dinheiro .resultado .titulo { align-items: center; font-size: var(--fs-medio); }
+.tela-dinheiro .resultado .titulo svg { width: 26px; height: 26px; stroke-width: 2.25; color: var(--verde-escuro); }
+.tela-dinheiro .resultado.saiu { border-top-color: var(--laranja-sol); }
+.tela-dinheiro .resultado.saiu .valor, .tela-dinheiro .resultado.saiu .titulo svg { color: var(--sai-texto); }
+.tela-dinheiro .resultado.negativo .titulo svg { color: var(--vermelho-alerta); }
+
+/* Três resultados, passo a passo */
+.tela-dinheiro .passos-resultado { list-style: none; margin: 0; padding: 0; }
+.tela-dinheiro .passos-resultado > li {
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; column-gap: 16px; row-gap: 6px;
+  padding: 14px 0; border-bottom: 1px solid var(--linha);
+}
+.tela-dinheiro .passos-resultado > li:last-child { border-bottom: 0; padding-bottom: 4px; }
+.tela-dinheiro .numero-passo {
+  width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--grad-botao); color: #fff; font-weight: 700; box-shadow: var(--sombra-botao);
+}
+.tela-dinheiro .nome-passo { font-weight: 700; font-size: var(--fs-medio); }
+.tela-dinheiro .valor-passo { display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }
+.tela-dinheiro .valor-passo .dinheiro { font-size: var(--fs-h3); font-weight: 700; color: var(--verde-escuro); }
+.tela-dinheiro .passos-resultado > li.negativo .valor-passo .dinheiro { color: var(--vermelho-alerta); }
+
+/* Listas com barrinha de valor (formas, quem recebeu, grupos de saída) */
+.tela-dinheiro .lista-barras { list-style: none; margin: 0 0 8px; padding: 0; }
+.tela-dinheiro .lista-barras > li { padding: 8px 0 12px; border-bottom: 1px solid var(--linha); }
+.tela-dinheiro .lista-barras > li:last-child { border-bottom: 0; }
+.tela-dinheiro .lista-barras .linha { display: flex; align-items: center; gap: 12px; min-height: 48px; width: 100%; }
+.tela-dinheiro .lista-barras .nome-item { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; font-weight: 700; }
+.tela-dinheiro .lista-barras .nome-item svg { width: 22px; height: 22px; color: var(--tom-texto, var(--azul-escuro)); }
+.tela-dinheiro .lista-barras .linha .dinheiro { font-weight: 700; }
+.tela-dinheiro .lista-barras .linha.sem-itens .nome-item { padding-left: 32px; font-weight: 400; }
+.tela-dinheiro .lista-barras .linha.sem-itens .dinheiro { font-weight: 400; color: var(--tinta-suave); }
+.tela-dinheiro button.linha.abre {
+  margin: 0 -8px; width: calc(100% + 16px); padding: 4px 8px; border: 0; border-radius: 12px; background: transparent;
+  text-align: left; cursor: pointer; color: var(--tinta); transition: background-color var(--movimento);
+}
+.tela-dinheiro button.linha.abre .nome-item { color: var(--azul-escuro); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 4px; }
+.tela-dinheiro button.linha.abre .nome-item svg { color: var(--azul-escuro); }
+.tela-dinheiro button.linha.abre:hover { background: var(--azul-espuma); }
+.tela-dinheiro .lista-barras .barra-valor { margin-top: 4px; }
+.tela-dinheiro .tom-caixa .barra-valor > span { background: var(--grad-verde); }
+.tela-dinheiro .tom-sai .barra-valor > span { background: var(--laranja-sol); }
+.tela-dinheiro .lista-barras .categorias { list-style: none; margin: 10px 0 0 10px; padding: 0 0 0 20px; border-left: 3px solid var(--linha); }
+.tela-dinheiro .lista-barras .categorias > li { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 6px 0; }
+.tela-dinheiro .info-ocupacao { display: flex; align-items: flex-start; gap: 10px; margin: 12px 0 14px; padding: 10px 14px; border-radius: var(--raio); background: var(--azul-espuma); }
+.tela-dinheiro .info-ocupacao svg { width: 22px; height: 22px; margin-top: 2px; color: var(--azul-escuro); }
+.tela-dinheiro .lista-entradas { margin-top: 10px; }
+.tela-dinheiro .lista-entradas .nome { font-size: var(--fs-base); }
+.tela-dinheiro .rodape-cartao { margin: 10px 0 0; }
+.tela-dinheiro .rodape-cartao .botao { margin-left: -14px; }
+
+/* ---- Listas com folhinha (contas, despesas, vales) ---- */
+.tela-dinheiro .lista-contas > li { padding-left: 10px; padding-right: 10px; }
+.tela-dinheiro .lista-contas .principal-item { min-width: 0; }
+.tela-dinheiro .lista-contas .principal-item > .etiqueta { margin-bottom: 4px; }
+.tela-dinheiro .lista-contas .valor { display: flex; flex-direction: column; align-items: flex-end; }
+.tela-dinheiro .lista-contas .valor .ajuste { font-size: var(--fs-min); font-weight: 400; color: var(--tinta-suave); }
+.tela-dinheiro .lista-contas .valor .variavel { font-weight: 400; color: var(--tinta-suave); }
+.tela-dinheiro .lista-contas .acoes { display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+.tela-dinheiro .lista-contas li.vence-hoje { background: linear-gradient(90deg, var(--sai-fundo), transparent 45%); }
+.tela-dinheiro .lista-contas li.paga .nome { color: var(--tinta-suave); }
+.tela-dinheiro .lista-contas li.parada, .tela-dinheiro .cartao.parada { opacity: 0.65; }
+.tela-dinheiro .lista-contas .quitacao { display: inline-flex; align-items: center; gap: 6px; margin-top: 4px; font-weight: 700; color: var(--ocupado-texto); }
+.tela-dinheiro .lista-contas .quitacao svg { width: 20px; height: 20px; }
+.tela-dinheiro .lista-contas .obs { color: var(--tinta-suave); font-size: var(--fs-min); margin-top: 2px; }
+.tela-dinheiro .lista-despesas li.desfeita { opacity: 0.6; }
+.tela-dinheiro .lista-despesas li.desfeita .nome, .tela-dinheiro .lista-despesas li.desfeita .valor { text-decoration: line-through; }
+.tela-dinheiro .lista-despesas .nome { font-size: var(--fs-base); }
+.tela-dinheiro .lista-despesas .folhinha, .tela-dinheiro .lista-vales .folhinha { width: 56px; }
+.tela-dinheiro .lista-despesas .folhinha .dia, .tela-dinheiro .lista-vales .folhinha .dia { font-size: 1.333rem; }
+.tela-dinheiro .lista-vales > li { padding-top: 10px; padding-bottom: 10px; }
+
+/* Resumo do mês em Contas */
+.tela-dinheiro .resumo-contas { display: grid; grid-template-columns: repeat(2, minmax(0, 340px)); gap: 16px; margin-bottom: 20px; }
+.tela-dinheiro .resumo-contas .numero-grande { display: flex; align-items: center; gap: 14px; }
+.tela-dinheiro .resumo-contas .chip-icone { width: 52px; height: 52px; border-radius: 16px; }
+.tela-dinheiro .resumo-contas .chip-icone svg { width: 28px; height: 28px; }
+
+/* Abas de Contas */
+.tela-dinheiro .abas-contas .aba { text-decoration: none; }
+
+/* ---- Funcionárias: contracheque ---- */
+.tela-dinheiro .contracheque { margin: 6px 0 4px; }
+.tela-dinheiro .contracheque tbody th { font-weight: 400; }
+.tela-dinheiro .contracheque tbody tr:nth-child(even) td, .tela-dinheiro .contracheque tbody tr:nth-child(even) th { background: transparent; }
+.tela-dinheiro .contracheque tbody tr:hover td { background: transparent; }
+.tela-dinheiro .contracheque tfoot th, .tela-dinheiro .contracheque tfoot td { padding: 14px; border-top: 2px solid var(--tinta); font-weight: 700; font-size: var(--fs-medio); text-align: left; }
+.tela-dinheiro .contracheque tfoot td { text-align: right; font-size: var(--fs-h3); color: var(--verde-escuro); }
+
+/* ---- Lançar despesa ---- */
+.tela-dinheiro .opcao[aria-pressed='true'] { background: var(--grad-ativo); border-color: var(--azul-noite); color: #fff; box-shadow: var(--sombra-botao); }
+.tela-dinheiro .opcao[aria-pressed='true'] .marca { border-color: #fff; color: var(--azul-escuro); }
+.tela-dinheiro .opcao[aria-pressed='true'] .marca svg { visibility: visible; }
+.tela-dinheiro .campo-data { width: 220px; min-height: 60px; }
+.tela-dinheiro .campo-categoria { width: 280px; min-height: 60px; }
+.tela-dinheiro .entrada.selecionado { border-color: var(--azul-noite); background: var(--azul-espuma); font-weight: 700; box-shadow: 0 0 0 3px rgba(10, 123, 163, 0.18); }
+.tela-dinheiro .acoes-despesa { margin: 4px 0 20px; }
+
+/* ---- Celular e tablet ---- */
+@media (max-width: 899px) {
+  .tela-dinheiro .barra-periodo { flex-direction: column; align-items: stretch; }
+  .tela-dinheiro .barra-periodo .abas { display: flex; }
+  .tela-dinheiro .barra-periodo .aba { flex: 1; justify-content: center; }
+  .tela-dinheiro .resultado .valor { font-size: var(--fs-h1); }
+}
+@media (max-width: 699px) {
+  .tela-dinheiro .titulo-tela > .botoes { width: 100%; }
+  .tela-dinheiro .titulo-tela > .botoes .botao { flex: 1; }
+  .tela-dinheiro .abas { display: flex; width: 100%; }
+  .tela-dinheiro .aba { flex: 1 1 auto; justify-content: center; }
+  .tela-dinheiro .navegador { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
+  .tela-dinheiro .navegador .periodo, .tela-dinheiro .barra-periodo .navegador .periodo { grid-column: 1 / -1; order: -1; min-width: 0; }
+  .tela-dinheiro .navegador .botao.sem-borda { grid-column: 1 / -1; }
+  .tela-dinheiro .barra-mes > .botao, .tela-dinheiro .barra-acoes > .botao { width: 100%; }
+  .tela-dinheiro .barra-acoes { flex-direction: column; align-items: stretch; }
+  .tela-dinheiro .resumo-contas { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .tela-dinheiro .resumo-contas .numero-grande .valor { font-size: var(--fs-h1); }
+  .tela-dinheiro .cartao-topo { flex-wrap: wrap; }
+  .tela-dinheiro .passos-resultado > li { grid-template-columns: auto minmax(0, 1fr); column-gap: 12px; }
+  .tela-dinheiro .valor-passo { grid-column: 2; justify-content: flex-start; }
+  .tela-dinheiro .lista-contas > li { grid-template-columns: auto minmax(0, 1fr); column-gap: 12px; padding-left: 6px; padding-right: 6px; }
+  .tela-dinheiro .lista-contas .valor { grid-column: 2; align-items: flex-start; }
+  .tela-dinheiro .lista-contas .acoes { grid-column: 1 / -1; justify-content: stretch; }
+  .tela-dinheiro .lista-contas .acoes .botao { flex: 1 1 auto; }
+  .tela-dinheiro .lista-contas .acoes .botao.sem-borda { flex: 0 0 auto; }
+  .tela-dinheiro .campo-data, .tela-dinheiro .campo-categoria { width: 100%; }
+  .tela-dinheiro .acoes-despesa .botao { width: 100%; }
+}
+
+/* ---- Ajustes finos ---- */
+.tela-dinheiro .tabela tbody tr:nth-child(even) th { background: #fffcf6; }
+.tela-dinheiro .tabela tbody tr:hover th { background: var(--azul-espuma); }
+.tela-dinheiro .contracheque tfoot th, .tela-dinheiro .contracheque tfoot td { border-bottom: 0; }
+.tela-dinheiro .acoes-funcionaria { margin-top: 16px; }
+.tela-dinheiro .lista-vales .nome { font-size: var(--fs-base); }
+.tela-dinheiro .lista-vales .nome svg { color: var(--verde-escuro); }
+@media (min-width: 700px) {
+  /* Colunas de valor e botões alinhadas de uma linha para outra */
+  .tela-dinheiro .lista-contas .valor { min-width: 130px; }
+  .tela-dinheiro .lista-contas .acoes { min-width: 252px; justify-content: flex-start; }
+  .tela-dinheiro .lista-despesas .acoes { min-width: 236px; justify-content: flex-end; }
+  .tela-dinheiro .lista-vales .acoes, .tela-dinheiro .lista-vales .valor { min-width: 0; }
+}

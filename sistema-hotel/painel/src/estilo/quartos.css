@@ -1,0 +1,123 @@
+/* ===== Área Quartos (mapa, hóspedes, editar quartos) =====
+   Complementos de app.css, só com os tokens dele. Tudo dentro de .area-quartos (Quartos.tsx) para não vazar para outras telas. */
+
+/* --- Mapa --- */
+.area-quartos .titulo-tela .periodo { color: var(--tinta); font-weight: 700; }
+.area-quartos .mapa-cab.mapa-canto {
+  position: sticky; left: 0; z-index: 2;
+  display: flex; align-items: center; justify-content: center;
+  background: #fff; border-right: 2px solid var(--linha); color: var(--tinta-suave);
+}
+.area-quartos .mapa-linha:not(.cabecalho-mapa) { grid-template-rows: repeat(var(--faixas, 1), minmax(64px, auto)); }
+.area-quartos .mapa-quarto { line-height: 1.15; }
+.area-quartos .mapa-livre { padding: 0 4px; }
+.area-quartos button.estadia-barra { font: inherit; text-align: left; cursor: pointer; }
+.area-quartos .estadia-barra .quem { line-height: 1.3; }
+.area-quartos .estadia-barra .como { margin-top: 1px; }
+.area-quartos .mapa-dica { display: flex; align-items: center; gap: 10px; margin: 12px 0 0; color: var(--tinta-suave); }
+.area-quartos .mapa-dica svg { width: 22px; height: 22px; color: var(--azul-escuro); }
+
+/* --- Cartões --- */
+.area-quartos .cartao-topo + .suave { margin: 0 0 4px 56px; }
+.area-quartos .vazio.nada svg, .area-quartos .vazio.sem-fotos svg { color: var(--tinta-suave); }
+.area-quartos .detalhe-icones { display: flex; flex-wrap: wrap; gap: 2px 16px; color: var(--tinta-suave); }
+.area-quartos .detalhe-icones > span { display: inline-flex; align-items: center; gap: 6px; }
+.area-quartos .detalhe-icones svg { width: 18px; height: 18px; color: var(--azul-escuro); }
+
+/* --- Lista de quartos (Editar quartos) --- */
+.area-quartos .lista-quartos > li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; align-items: center; column-gap: 16px; row-gap: 12px; flex-wrap: nowrap; }
+.area-quartos .lista-quartos .principal-item { min-width: 0; }
+.area-quartos .miniatura {
+  width: 112px; height: 84px; border-radius: 14px; object-fit: cover; display: block;
+  box-shadow: var(--sombra-1), 0 0 0 2px var(--linha);
+}
+.area-quartos .miniatura.sem-foto {
+  display: grid; place-items: center; align-content: center; gap: 2px;
+  background: var(--neutro-fundo); color: var(--tinta-suave); font-size: var(--fs-min); text-align: center; box-shadow: none;
+}
+.area-quartos .miniatura.sem-foto svg { width: 26px; height: 26px; }
+.area-quartos .acoes-quarto { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; align-items: center; }
+.area-quartos .lista-quartos .etiqueta { justify-self: start; }
+
+/* --- Formulário do quarto --- */
+.area-quartos .contador-pessoas { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.area-quartos .contador-pessoas .valor { font-size: var(--fs-medio); font-weight: 700; min-width: 104px; text-align: center; font-variant-numeric: tabular-nums; }
+.area-quartos .opcao[role='checkbox'] .marca { border-radius: 8px; }
+.area-quartos .escolha.comodidades .opcao { font-size: var(--fs-base); min-height: 52px; min-width: 0; padding: 8px 16px 8px 12px; }
+.area-quartos .outra-comodidade { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+.area-quartos .outra-comodidade .entrada { max-width: 320px; flex: 1 1 200px; min-height: 52px; }
+.area-quartos .form-quarto .marcar { margin-bottom: 4px; }
+.area-quartos .rodape-form { margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--linha); }
+
+/* --- Fotos do quarto --- */
+.area-quartos .zona-fotos {
+  display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center;
+  padding: 24px 20px; margin-bottom: 18px; border-radius: var(--raio-g);
+  border: 3px dashed var(--borda-campo); background: var(--azul-espuma);
+  transition: background-color var(--movimento), border-color var(--movimento);
+}
+.area-quartos .zona-fotos.arrastando { border-color: var(--azul-tropical); background: var(--ocupado-fundo); }
+.area-quartos .zona-fotos > svg { width: 40px; height: 40px; color: var(--azul-escuro); }
+.area-quartos .zona-fotos p { margin: 0; }
+.area-quartos .grade-fotos { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+.area-quartos .foto-quarto { margin: 0; padding: 10px; border-radius: 18px; background: #fff; box-shadow: var(--sombra-2), 0 0 0 1px var(--linha); }
+.area-quartos .foto-quarto img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 12px; }
+.area-quartos .foto-quarto figcaption { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
+.area-quartos .foto-quarto figcaption .botao { width: 100%; padding-left: 8px; padding-right: 8px; }
+.area-quartos .foto-quarto .etiqueta { justify-content: center; min-height: 48px; }
+
+/* --- Prévia (como o hóspede vê) --- */
+.area-quartos .previa { border-radius: 18px; overflow: hidden; box-shadow: var(--sombra-1), 0 0 0 1px var(--linha); }
+.area-quartos .previa-foto { position: relative; }
+.area-quartos .previa-foto img, .area-quartos .previa-foto .sem-foto { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; }
+.area-quartos .previa-foto .sem-foto { display: grid; place-items: center; background: var(--neutro-fundo); color: var(--tinta-suave); }
+.area-quartos .previa-foto .sem-foto span { display: inline-flex; align-items: center; gap: 8px; }
+.area-quartos .previa-foto .botoes { position: absolute; right: 10px; bottom: 10px; }
+.area-quartos .previa-texto { padding: 16px 18px 18px; border-top: 4px solid var(--laranja-sol); }
+.area-quartos .previa-texto h3 { margin-bottom: 4px; }
+.area-quartos .chips { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; margin: 8px 0 0; padding: 0; }
+.area-quartos .chips li { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 999px; background: var(--azul-bruma); color: var(--azul-escuro); font-size: var(--fs-min); font-weight: 700; }
+.area-quartos .chips svg { width: 16px; height: 16px; }
+
+/* --- Hóspedes --- */
+.area-quartos .busca-hospede .campo { margin-bottom: 4px; }
+.area-quartos .lista-clientes > li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; column-gap: 16px; row-gap: 6px; flex-wrap: nowrap; }
+.area-quartos .lista-clientes .principal-item { min-width: 0; }
+.area-quartos .lista-clientes .avatar { box-shadow: none; }
+.area-quartos .lista-clientes .historico { text-align: right; }
+.area-quartos .lista-clientes .historico .vezes { font-weight: 700; }
+.area-quartos .ficha-numeros { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.area-quartos .ficha-numeros .numero-grande .valor { font-size: var(--fs-h1); }
+.area-quartos .ficha-numeros .numero-grande .rotulo { display: flex; align-items: center; gap: 8px; }
+.area-quartos .ficha-numeros .numero-grande .rotulo svg { width: 20px; height: 20px; color: var(--tom-texto); }
+.area-quartos .dados-contato { list-style: none; margin: 4px 0 14px; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.area-quartos .dados-contato li { display: flex; align-items: center; gap: 12px; font-size: var(--fs-medio); }
+.area-quartos .dados-contato svg { width: 22px; height: 22px; color: var(--azul-escuro); }
+.area-quartos .obs-hospede { display: flex; gap: 10px; align-items: flex-start; padding: 10px 14px; border-radius: 14px; background: var(--sol-claro); color: var(--tinta); margin-bottom: 14px; }
+.area-quartos .obs-hospede svg { width: 20px; height: 20px; margin-top: 3px; color: var(--laranja-escuro); }
+.area-quartos .lista-estadias > li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; column-gap: 14px; row-gap: 8px; flex-wrap: nowrap; }
+.area-quartos .lista-estadias .principal-item { min-width: 0; }
+.area-quartos .lista-estadias .valor-estadia { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; font-weight: 700; text-align: right; }
+
+@media (max-width: 899px) {
+  .area-quartos .lista-quartos > li { grid-template-columns: auto minmax(0, 1fr); }
+  .area-quartos .lista-quartos .etiqueta { grid-column: 2; }
+  .area-quartos .lista-quartos .acoes-quarto { grid-column: 1 / -1; }
+  .area-quartos .lista-quartos .acoes-quarto .botao { flex: 1 1 auto; }
+  .area-quartos .miniatura { width: 88px; height: 66px; }
+  .area-quartos .cartao-topo + .suave { margin-left: 0; }
+}
+@media (max-width: 599px) {
+  .area-quartos .abas-quartos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; gap: 4px; }
+  .area-quartos .abas-quartos .aba { flex-direction: column; justify-content: center; gap: 2px; min-height: 64px; padding: 6px 4px; text-align: center; line-height: 1.15; font-size: var(--fs-min); }
+  .area-quartos .titulo-tela > .botoes { width: 100%; }
+  .area-quartos .titulo-tela .navegador { width: 100%; flex-wrap: nowrap; gap: 8px; }
+  .area-quartos .titulo-tela .navegador .botao { flex: 1 1 auto; padding-left: 10px; padding-right: 10px; gap: 6px; }
+  .area-quartos .titulo-tela > .botoes > .botao { flex: 1 1 auto; }
+  .area-quartos .mapa-dica { align-items: flex-start; }
+  .area-quartos .lista-clientes > li { grid-template-columns: auto minmax(0, 1fr); }
+  .area-quartos .lista-clientes .historico { grid-column: 2; text-align: left; }
+  .area-quartos .ficha-numeros { grid-template-columns: minmax(0, 1fr); }
+  .area-quartos .lista-estadias > li { grid-template-columns: auto minmax(0, 1fr); }
+  .area-quartos .lista-estadias .valor-estadia { grid-column: 2; flex-direction: row; flex-wrap: wrap; align-items: center; text-align: left; }
+}

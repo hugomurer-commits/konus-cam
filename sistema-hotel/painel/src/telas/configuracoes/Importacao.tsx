@@ -1,7 +1,29 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  BedDouble,
+  CalendarRange,
+  Check,
+  ChevronDown,
+  ChevronUp,
+  CircleDashed,
+  ClipboardCheck,
+  ClipboardList,
+  DoorOpen,
+  FileSpreadsheet,
+  History,
+  Info,
+  PackageCheck,
+  Receipt,
+  Repeat,
+  Scale,
+  Tags,
+  Upload,
+  Users,
+  Wallet,
+} from 'lucide-react';
 import { api } from '../../api';
-import { Carregando, Dinheiro, Etiqueta, MensagemErro } from '../../componentes/Basicos';
+import { Carregando, ChipIcone, Dinheiro, Etiqueta, MensagemErro } from '../../componentes/Basicos';
 import { useInteracao } from '../../componentes/Interacao';
 import { dataHora, emReais, nomeMes } from '../../formato';
 
@@ -49,7 +71,8 @@ export function TelaImportacao() {
     <>
       {!imp && dados.data!.podeImportar && <EnviarPlanilha />}
       {!imp && !dados.data!.podeImportar && (
-        <div className="cartao">
+        <div className="cartao aviso-cartao">
+          <ChipIcone icone={Info} tom="tom-config" />
           <p>O sistema já tem lançamentos feitos à mão, então a planilha antiga não pode mais ser importada.</p>
         </div>
       )}
@@ -70,14 +93,17 @@ function EnviarPlanilha() {
     onSuccess: () => cliente.invalidateQueries(),
   });
   return (
-    <div className="cartao">
-      <h2>Importar a planilha antiga</h2>
+    <section className="cartao">
+      <header className="cartao-topo">
+        <ChipIcone icone={FileSpreadsheet} tom="tom-livre" />
+        <h2>Importar a planilha antiga</h2>
+      </header>
       <p>
         Escolha o arquivo <strong>LANÇAMENTOS ATUAIS</strong> (.xlsx). O sistema traz os hóspedes, as diárias, os
         pagamentos e as despesas, e confere se os totais batem com a planilha.
       </p>
-      <p className="suave">Use a versão mais recente da planilha. A importação só pode ser feita uma vez.</p>
-      <div className="campo">
+      <p className="apoio">Use a versão mais recente da planilha. A importação só pode ser feita uma vez.</p>
+      <div className="campo campo-arquivo">
         <label htmlFor="arquivo">Arquivo da planilha</label>
         <input
           id="arquivo"
@@ -88,9 +114,10 @@ function EnviarPlanilha() {
       </div>
       <MensagemErro erro={enviar.error} />
       <button className="botao principal grande" disabled={!arquivo || enviar.isPending} onClick={() => enviar.mutate()}>
+        <Upload aria-hidden="true" />
         {enviar.isPending ? 'Importando… (pode levar alguns segundos)' : 'Importar'}
       </button>
-    </div>
+    </section>
   );
 }
 
@@ -112,12 +139,13 @@ function Resultado({ imp }: { imp: Importacao }) {
   };
   return (
     <>
-      <div className="cartao">
-        <div className="titulo-tela">
+      <section className={`cartao cartao-lista ${tudoBate ? 'tom-livre' : 'tom-perigo'}`}>
+        <header className="cartao-topo">
+          <ChipIcone icone={ClipboardCheck} tom={tudoBate ? 'tom-livre' : 'tom-perigo'} />
           <h2>Conferência dos totais</h2>
           {tudoBate ? <Etiqueta estado="pago">Tudo bate com a planilha</Etiqueta> : <Etiqueta estado="atrasado">Há diferenças</Etiqueta>}
-        </div>
-        <p className="suave">
+        </header>
+        <p className="apoio">
           Planilha <strong>{imp.arquivo}</strong>, importada em {dataHora(imp.feitaEm)}.
         </p>
         <div className="rolagem-x">
@@ -133,7 +161,7 @@ function Resultado({ imp }: { imp: Importacao }) {
             <tbody>
               {r.validacao.map((v) => (
                 <tr key={v.item}>
-                  <td>{v.item}</td>
+                  <td className="item-verificacao">{v.item}</td>
                   <td className="numero">{valor(v.planilha, v.dinheiro)}</td>
                   <td className="numero">{valor(v.sistema, v.dinheiro)}</td>
                   <td>
@@ -149,22 +177,24 @@ function Resultado({ imp }: { imp: Importacao }) {
           </table>
         </div>
         {r.totaisNoTopoDaPlanilha.despesasColunaI !== null && (
-          <p className="suave pequeno" style={{ marginTop: 10 }}>
+          <p className="nota-importacao">
             O topo da aba DESPESAS mostra {emReais(r.totaisNoTopoDaPlanilha.despesasColunaI)} (soma da coluna I). O sistema usa
             quantidade × valor unitário, como manda a especificação; as linhas que explicam a diferença estão em "Para
             conferir".
           </p>
         )}
-        <div className="botoes" style={{ marginTop: 10 }}>
-          <button className="botao pequeno" onClick={() => setVerMeses(!verMeses)}>
+        <div className="botoes" style={{ marginTop: 14 }}>
+          <button className="botao" aria-expanded={verMeses} onClick={() => setVerMeses(!verMeses)}>
+            {verMeses ? <ChevronUp aria-hidden="true" /> : <CalendarRange aria-hidden="true" />}
             {verMeses ? 'Esconder mês a mês' : `Ver mês a mês${mesesDiferentes.length ? ` (${mesesDiferentes.length} com diferença)` : ''}`}
           </button>
-          <button className="botao pequeno" onClick={() => setVerReceita(!verReceita)}>
+          <button className="botao" aria-expanded={verReceita} onClick={() => setVerReceita(!verReceita)}>
+            {verReceita ? <ChevronUp aria-hidden="true" /> : <Scale aria-hidden="true" />}
             {verReceita ? 'Esconder receita antiga' : 'Receita digitada × cadastro'}
           </button>
         </div>
         {verMeses && (
-          <div className="rolagem-x" style={{ marginTop: 12 }}>
+          <div className="rolagem-x" style={{ marginTop: 16 }}>
             <table className="tabela">
               <thead>
                 <tr>
@@ -190,8 +220,8 @@ function Resultado({ imp }: { imp: Importacao }) {
           </div>
         )}
         {verReceita && (
-          <div style={{ marginTop: 12 }}>
-            <p className="suave">
+          <div style={{ marginTop: 16 }}>
+            <p className="apoio">
               Na planilha antiga a receita era digitada de novo na aba DESPESAS. Ela <strong>não</strong> entra no caixa do
               sistema; serve só para ver o quanto não batia com as diárias do cadastro.
             </p>
@@ -219,32 +249,72 @@ function Resultado({ imp }: { imp: Importacao }) {
             </div>
           </div>
         )}
-      </div>
+      </section>
 
-      <div className="cartao">
-        <h2>O que entrou no sistema</h2>
-        <ul>
-          <li>
-            {r.estadias.total.toLocaleString('pt-BR')} hospedagens (
-            {Object.entries(r.estadias.porStatus)
-              .map(([s, n]) => `${n.toLocaleString('pt-BR')} ${STATUS[s] ?? s}`)
-              .join(', ')}
-            )
+      <section className="cartao">
+        <header className="cartao-topo">
+          <ChipIcone icone={PackageCheck} tom="tom-ocupado" />
+          <h2>O que entrou no sistema</h2>
+        </header>
+        <ul className="resumo-importacao">
+          <li className="largo">
+            <ChipIcone icone={BedDouble} tom="tom-ocupado" />
+            <span className="texto">
+              <span className="numero-destaque">{r.estadias.total.toLocaleString('pt-BR')}</span> hospedagens (
+              {Object.entries(r.estadias.porStatus)
+                .map(([s, n]) => `${n.toLocaleString('pt-BR')} ${STATUS[s] ?? s}`)
+                .join(', ')}
+              )
+            </span>
           </li>
-          <li>{r.estadias.hospedes.toLocaleString('pt-BR')} hóspedes</li>
           <li>
-            {r.estadias.pagamentos.toLocaleString('pt-BR')} pagamentos, somando <Dinheiro valor={r.estadias.somaPagamentos} />
+            <ChipIcone icone={Users} tom="tom-livre" />
+            <span className="texto">
+              <span className="numero-destaque">{r.estadias.hospedes.toLocaleString('pt-BR')}</span> hóspedes
+            </span>
           </li>
           <li>
-            {r.estadias.quartos} quartos; ativos: {r.estadias.quartosAtivos.join(', ')}. Os outros ficaram desativados (o
-            histórico continua lá). Confira em Quartos → Editar quartos.
+            <ChipIcone icone={Wallet} tom="tom-caixa" />
+            <span className="texto">
+              <span className="numero-destaque">{r.estadias.pagamentos.toLocaleString('pt-BR')}</span> pagamentos, somando{' '}
+              <Dinheiro valor={r.estadias.somaPagamentos} className="forte" />
+            </span>
           </li>
-          <li>{r.estadias.noitesComDoisClientes} noites em que o quarto foi alugado de novo na mesma noite (normal: hóspede saiu antes)</li>
-          <li>{r.despesas.importadas.toLocaleString('pt-BR')} despesas</li>
-          {r.despesas.categoriasCriadas.length > 0 && <li>Categorias novas: {r.despesas.categoriasCriadas.join(', ')}</li>}
-          <li>{r.faturamentoMeses} meses de faturamento antigo (2023 a jan/2025), só para comparação</li>
+          <li className="largo">
+            <ChipIcone icone={DoorOpen} tom="tom-livre" />
+            <span className="texto">
+              <span className="numero-destaque">{r.estadias.quartos}</span> quartos; ativos: {r.estadias.quartosAtivos.join(', ')}. Os
+              outros ficaram desativados (o histórico continua lá). Confira em Quartos → Editar quartos.
+            </span>
+          </li>
+          <li className="largo">
+            <ChipIcone icone={Repeat} tom="tom-sai" />
+            <span className="texto">
+              <span className="numero-destaque">{r.estadias.noitesComDoisClientes}</span> noites em que o quarto foi alugado de novo na
+              mesma noite (normal: hóspede saiu antes)
+            </span>
+          </li>
+          <li>
+            <ChipIcone icone={Receipt} tom="tom-contas" />
+            <span className="texto">
+              <span className="numero-destaque">{r.despesas.importadas.toLocaleString('pt-BR')}</span> despesas
+            </span>
+          </li>
+          <li>
+            <ChipIcone icone={History} tom="tom-config" />
+            <span className="texto">
+              <span className="numero-destaque">{r.faturamentoMeses}</span> meses de faturamento antigo (2023 a jan/2025), só para
+              comparação
+            </span>
+          </li>
+          {r.despesas.categoriasCriadas.length > 0 && (
+            <li className="largo">
+              <ChipIcone icone={Tags} tom="tom-contas" />
+              <span className="texto">Categorias novas: {r.despesas.categoriasCriadas.join(', ')}</span>
+            </li>
+          )}
         </ul>
-      </div>
+      </section>
 
       <ParaConferir grupos={imp.grupos} />
     </>
@@ -255,24 +325,38 @@ function ParaConferir({ grupos }: { grupos: Importacao['grupos'] }) {
   const [aberto, setAberto] = useState<string | null>(null);
   const abertas = grupos.reduce((s, g) => s + g.abertas, 0);
   return (
-    <div className="cartao">
-      <h2>Para conferir ({abertas.toLocaleString('pt-BR')})</h2>
-      <p className="suave">
+    <section className={`cartao cartao-lista ${abertas === 0 ? 'tom-livre' : 'tom-chega'}`}>
+      <header className="cartao-topo">
+        <ChipIcone icone={ClipboardList} tom={abertas === 0 ? 'tom-livre' : 'tom-chega'} />
+        <h2>Para conferir</h2>
+        <span className="contagem" aria-label={`${abertas.toLocaleString('pt-BR')} para conferir`}>
+          {abertas.toLocaleString('pt-BR')}
+        </span>
+      </header>
+      <p className="apoio">
         Nada foi apagado nem corrigido sozinho. Abra cada grupo, confira na planilha ou com quem lançou, corrija no sistema se
         precisar e marque "Conferido".
       </p>
-      <ul className="lista">
+      <ul className="grupos-conferir">
         {grupos.map((g) => (
-          <li key={g.tipo} style={{ display: 'block' }}>
-            <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-              <div className="principal-item">
+          <li key={g.tipo}>
+            <div className="grupo-linha">
+              <div>
                 <div className="nome">{g.titulo}</div>
                 <div className="suave pequeno">
                   {g.abertas === 0 ? 'Tudo conferido' : `${g.abertas} de ${g.total} para conferir`}
                 </div>
               </div>
-              {g.abertas === 0 ? <Etiqueta estado="pago">Conferido</Etiqueta> : <Etiqueta estado="chega">{g.abertas}</Etiqueta>}
-              <button className="botao pequeno" onClick={() => setAberto(aberto === g.tipo ? null : g.tipo)}>
+              {g.abertas === 0 ? (
+                <Etiqueta estado="pago">Conferido</Etiqueta>
+              ) : (
+                <span className="etiqueta est-chega">
+                  <CircleDashed aria-hidden="true" />
+                  Falta {g.abertas.toLocaleString('pt-BR')}
+                </span>
+              )}
+              <button className="botao" aria-expanded={aberto === g.tipo} onClick={() => setAberto(aberto === g.tipo ? null : g.tipo)}>
+                {aberto === g.tipo ? <ChevronUp aria-hidden="true" /> : <ChevronDown aria-hidden="true" />}
                 {aberto === g.tipo ? 'Fechar' : 'Ver'}
               </button>
             </div>
@@ -280,7 +364,7 @@ function ParaConferir({ grupos }: { grupos: Importacao['grupos'] }) {
           </li>
         ))}
       </ul>
-    </div>
+    </section>
   );
 }
 
@@ -305,10 +389,10 @@ function ListaPendencias({ tipo }: { tipo: string }) {
   });
   if (lista.isLoading) return <p className="suave">Carregando…</p>;
   return (
-    <ul className="lista" style={{ marginTop: 8, paddingLeft: 12, borderLeft: '4px solid var(--linha)' }}>
+    <ul className="lista-pendencias">
       {lista.data?.pendencias.map((p) => (
         <li key={p.id}>
-          <div className="principal-item">
+          <div>
             <div>{p.mensagem}</div>
             {p.linha && (
               <div className="suave pequeno">
@@ -317,10 +401,11 @@ function ListaPendencias({ tipo }: { tipo: string }) {
             )}
           </div>
           <button
-            className={`botao pequeno${p.resolvida_em ? ' verde' : ''}`}
+            className={`botao${p.resolvida_em ? ' verde' : ''}`}
             onClick={() => marcar.mutate({ id: p.id, resolvida: !p.resolvida_em })}
           >
-            {p.resolvida_em ? '✓ Conferido' : 'Marcar conferido'}
+            {p.resolvida_em ? <Check aria-hidden="true" /> : <ClipboardCheck aria-hidden="true" />}
+            {p.resolvida_em ? 'Conferido' : 'Marcar conferido'}
           </button>
         </li>
       ))}

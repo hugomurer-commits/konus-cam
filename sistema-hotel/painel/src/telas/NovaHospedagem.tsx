@@ -1,18 +1,39 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  BedDouble,
+  CalendarPlus,
+  Check,
+  ChevronDown,
+  ChevronLeft,
+  ChevronUp,
+  Clock,
+  ConciergeBell,
+  HandCoins,
+  LogOut,
+  MessageCircle,
+  Pencil,
+  RefreshCw,
+  Repeat,
+  Search,
+  Sparkles,
+  UserPlus,
+  UserRound,
+} from 'lucide-react';
 import { api } from '../api';
-import { CampoReais, Dinheiro, Escolha, MensagemErro } from '../componentes/Basicos';
+import { CampoReais, ChipIcone, Dinheiro, Escolha, Etiqueta, MensagemErro, TituloTela } from '../componentes/Basicos';
 import {
   CamposPagamento,
+  detalhePagamento,
   lembrarPagamento,
   preferenciaPagamento,
-  textoPagamento,
   useContasRecebedoras,
   type Pagamento,
 } from '../componentes/AcoesEstadia';
 import { useInteracao } from '../componentes/Interacao';
-import { data, dataCurta, diaDaSemana, diasEntre, documento, emReais, hojeLocal, noites, somarDias, telefone } from '../formato';
+import { data, dataCurta, diaDaSemana, diasEntre, documento, emReais, hojeLocal, nomeProprio, noites, somarDias, telefone } from '../formato';
+import '../estilo/hospedagem.css';
 
 // Tela mais importante (seção 5.2). Meta: hóspede que volta em menos de 30 segundos.
 
@@ -35,6 +56,20 @@ interface QuartoDisp {
   livre: boolean;
   precisaLimpar: boolean;
   ocupadoPor: string | null;
+}
+
+/** Cartão de um passo: número na bolinha (verde e "Pronto" quando já tem resposta) + título. */
+function Passo({ numero, rotulo, feito, children }: { numero: number; rotulo: ReactNode; feito?: boolean; children: ReactNode }) {
+  return (
+    <section className={`cartao passo${feito ? ' feito' : ''}`}>
+      <span className="rotulo">
+        <span className="passo-numero">{numero}</span>
+        {rotulo}
+        {feito && <Etiqueta estado="pago">Pronto</Etiqueta>}
+      </span>
+      {children}
+    </section>
+  );
 }
 
 function useDebounce<T>(valor: T, ms: number): T {
@@ -164,7 +199,7 @@ export function NovaHospedagem() {
     if (quartoIndisponivel) return setErro(new Error(`O quarto ${quarto.codigo} não está livre nessas datas.`));
     if (pagarAgora && (!pag.valor || !pag.contaRecebedoraId))
       return setErro(new Error(!pag.valor ? 'Informe o valor recebido.' : 'Escolha quem recebeu o pagamento.'));
-    const nome = hospede?.nome ?? novo!.nome;
+    const nome = nomeProprio(hospede?.nome ?? novo!.nome);
     const ok = await confirmar({
       titulo: 'Confirmar hospedagem',
       mensagem: (
@@ -172,16 +207,13 @@ export function NovaHospedagem() {
           <strong>{nome}</strong> no quarto <strong>{quarto.codigo}</strong>, {noites(qtdNoites)} ({dataCurta(entrada)} a {dataCurta(saida)}),{' '}
           {pessoas} {pessoas === 1 ? 'pessoa' : 'pessoas'}, total <strong>{emReais(total)}</strong>.
           <br />
-          {pagarAgora ? (
-            <>
-              Recebido agora: <strong>{textoPagamento(pag, contas.data?.contas)}</strong>.
-            </>
-          ) : (
-            'Sem pagamento agora.'
-          )}
+          {pagarAgora ? 'Recebido agora:' : 'Sem pagamento agora.'}
         </>
       ),
       confirmar: 'Confirmar',
+      verde: true,
+      icone: BedDouble,
+      recibo: pagarAgora ? { valor: emReais(pag.valor), detalhe: detalhePagamento(pag, contas.data?.contas) } : undefined,
     });
     if (!ok) return;
     setSalvando(true);
@@ -218,33 +250,38 @@ export function NovaHospedagem() {
 
   const quartosMostrados = (disp.data?.quartos ?? []).filter((q) => q.livre);
   const ocupados = (disp.data?.quartos ?? []).filter((q) => !q.livre);
+  const quartosProntos = quartosMostrados.filter((q) => !q.precisaLimpar);
+  const quartosParaLimpar = quartosMostrados.filter((q) => q.precisaLimpar);
+
+  // Passo "feito" = já tem resposta válida (bolinha verde + "Pronto")
+  const feito1 = !!hospede || !!novo?.nome.trim();
+  const feito3 = !!quarto && !quartoIndisponivel;
+  const feito4 = diaria > 0;
+  const feito5 = !pagarAgora || (!!pag.valor && !!pag.contaRecebedoraId);
 
   return (
-    <>
-      <div className="titulo-tela">
-        <h1>
-          Nova hospedagem <span className="subtitulo">(check-in)</span>
-        </h1>
+    <div className="tela-nova">
+      <TituloTela icone={CalendarPlus} tom="tom-ocupado" titulo="Nova hospedagem" subtitulo="Check-in: preencha os passos e salve no fim.">
         <Link to="/" className="botao">
+          <ChevronLeft aria-hidden="true" />
           Voltar
         </Link>
-      </div>
+      </TituloTela>
 
-      <div className="cartao passo">
-        <span className="rotulo">1. Hóspede</span>
+      <Passo numero={1} rotulo="Hóspede" feito={feito1}>
         {hospede ? (
-          <div className="botoes" style={{ alignItems: 'flex-start' }}>
-            <div className="principal-item" style={{ flex: 1 }}>
-              <div className="nome" style={{ fontSize: '1.3rem' }}>
-                {hospede.nome}
-              </div>
+          <div className="hospede-escolhido">
+            <ChipIcone icone={UserRound} tom="tom-livre" />
+            <div className="quem">
+              <div className="nome">{nomeProprio(hospede.nome)}</div>
               <div className="suave">
-                {[telefone(hospede.telefone), documento(hospede.cpf_cnpj), [hospede.cidade, hospede.uf].filter(Boolean).join('/')]
+                {[telefone(hospede.telefone), documento(hospede.cpf_cnpj), [nomeProprio(hospede.cidade), hospede.uf].filter(Boolean).join('/')]
                   .filter(Boolean)
                   .join(' · ')}
               </div>
               {hospede.visitas > 0 && (
-                <div className="forte" style={{ color: 'var(--verde-escuro)', marginTop: 4 }}>
+                <div className="ja-veio">
+                  <Repeat aria-hidden="true" />
                   Já veio {hospede.visitas} {hospede.visitas === 1 ? 'vez' : 'vezes'}
                   {hospede.ultima ? `, última em ${data(hospede.ultima)}` : ''}
                 </div>
@@ -257,11 +294,16 @@ export function NovaHospedagem() {
                 setTimeout(() => campoBusca.current?.focus(), 0);
               }}
             >
+              <RefreshCw aria-hidden="true" />
               Trocar
             </button>
           </div>
         ) : novo ? (
           <>
+            <p className="aviso-novo">
+              <UserPlus aria-hidden="true" />
+              Hóspede novo
+            </p>
             <div className="linha-campos">
               <div className="campo">
                 <label htmlFor="h-nome">Nome</label>
@@ -285,6 +327,7 @@ export function NovaHospedagem() {
               </div>
             </div>
             <button className="botao pequeno" onClick={() => setNovo(null)}>
+              <Search aria-hidden="true" />
               Voltar para a busca
             </button>
           </>
@@ -292,33 +335,37 @@ export function NovaHospedagem() {
           <>
             <div className="campo">
               <label htmlFor="busca-hospede">CPF, telefone ou nome</label>
-              <input
-                id="busca-hospede"
-                ref={campoBusca}
-                className="entrada-grande"
-                autoFocus
-                autoComplete="off"
-                value={busca}
-                onChange={(e) => setBusca(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && resultados.data?.hospedes.length === 1) escolherHospede(resultados.data.hospedes[0]);
-                }}
-                placeholder="Comece a digitar…"
-              />
+              <div className="campo-busca">
+                <Search aria-hidden="true" />
+                <input
+                  id="busca-hospede"
+                  ref={campoBusca}
+                  className="entrada-grande"
+                  autoFocus
+                  autoComplete="off"
+                  value={busca}
+                  onChange={(e) => setBusca(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && resultados.data?.hospedes.length === 1) escolherHospede(resultados.data.hospedes[0]);
+                  }}
+                  placeholder="Comece a digitar…"
+                />
+              </div>
             </div>
             {termo.trim().length >= 3 && resultados.data && (
-              <ul className="lista">
+              <ul className="lista resultados-busca">
                 {resultados.data.hospedes.map((h) => (
                   <li key={h.id}>
+                    <ChipIcone icone={UserRound} tom="tom-ocupado" />
                     <div className="principal-item">
-                      <div className="nome">{h.nome}</div>
-                      <div className="suave pequeno">
-                        {[telefone(h.telefone), [h.cidade, h.uf].filter(Boolean).join('/')].filter(Boolean).join(' · ')}
+                      <div className="nome">{nomeProprio(h.nome)}</div>
+                      <div className="detalhe">
+                        {[telefone(h.telefone), [nomeProprio(h.cidade), h.uf].filter(Boolean).join('/')].filter(Boolean).join(' · ')}
                         {h.visitas > 0 && ` · já veio ${h.visitas} ${h.visitas === 1 ? 'vez' : 'vezes'}${h.ultima ? `, última em ${dataCurta(h.ultima)}` : ''}`}
                       </div>
                     </div>
                     <button className="botao principal" onClick={() => escolherHospede(h)}>
-                      É este
+                      <Check aria-hidden="true" />É este
                     </button>
                   </li>
                 ))}
@@ -326,14 +373,14 @@ export function NovaHospedagem() {
               </ul>
             )}
             <button className="botao" onClick={comecarNovo} style={{ marginTop: 8 }}>
-              + Hóspede novo
+              <UserPlus aria-hidden="true" />
+              Hóspede novo
             </button>
           </>
         )}
-      </div>
+      </Passo>
 
-      <div className="cartao passo">
-        <span className="rotulo">2. Quando</span>
+      <Passo numero={2} rotulo="Quando" feito>
         <div className="campo">
           <span className="rotulo">Entrada</span>
           <div className="botoes">
@@ -349,8 +396,7 @@ export function NovaHospedagem() {
             />
             <input
               type="date"
-              className="entrada"
-              style={{ width: 200 }}
+              className="entrada entrada-data"
               aria-label="Outra data de entrada"
               value={entrada}
               min={somarDias(hoje, -1)}
@@ -370,8 +416,8 @@ export function NovaHospedagem() {
               }}
               opcoes={[
                 { valor: 1, texto: '1 noite' },
-                { valor: 2, texto: '2' },
-                { valor: 3, texto: '3' },
+                { valor: 2, texto: '2 noites' },
+                { valor: 3, texto: '3 noites' },
                 { valor: 0, texto: 'Outra' },
               ]}
             />
@@ -389,48 +435,69 @@ export function NovaHospedagem() {
             )}
           </div>
         </div>
-        <p className="forte">
-          Sai {diaDaSemana(saida)}, {data(saida)} ao meio-dia · {noites(diasEntre(entrada, saida))}
+        <p className="faixa-saida">
+          <LogOut aria-hidden="true" />
+          <span>
+            Sai {diaDaSemana(saida)}, {data(saida)} ao meio-dia · {noites(diasEntre(entrada, saida))}
+          </span>
         </p>
-      </div>
+      </Passo>
 
-      <div className="cartao passo">
-        <span className="rotulo">3. Quarto (livres nessas datas)</span>
+      <Passo
+        numero={3}
+        feito={feito3}
+        rotulo={
+          <>
+            Quarto <span className="rotulo-extra">(livres nessas datas)</span>
+          </>
+        }
+      >
         {disp.isLoading && <p className="suave">Vendo os quartos…</p>}
-        <div className="botoes">
-          {quartosMostrados.map((q) =>
-            q.precisaLimpar ? (
-              <span key={q.id} className="botoes" style={{ border: '2px dashed var(--limpar-borda)', borderRadius: 12, padding: 4 }}>
-                <span className="etiqueta est-limpar">{q.codigo}: limpar</span>
+        {quartosProntos.length > 0 && (
+          <Escolha
+            rotulo="Quarto"
+            valor={quartoId}
+            aoEscolher={(id) => {
+              const q = quartosProntos.find((x) => x.id === id);
+              setQuartoId(id);
+              if (q && pessoas > q.capacidade) setPessoas(q.capacidade);
+            }}
+            opcoes={quartosProntos.map((q) => ({
+              valor: q.id,
+              icone: BedDouble,
+              texto: (
+                <>
+                  {q.codigo}
+                  <span className="capacidade">até {q.capacidade}</span>
+                </>
+              ),
+            }))}
+          />
+        )}
+        {quartosParaLimpar.length > 0 && (
+          <div className="botoes para-limpar">
+            {quartosParaLimpar.map((q) => (
+              <span key={q.id} className="quarto-limpar">
+                <Etiqueta estado="limpar">{q.codigo}: limpar</Etiqueta>
                 <button className="botao pequeno" onClick={() => marcarLimpo(q)}>
+                  <Sparkles aria-hidden="true" />
                   Já está limpo
                 </button>
               </span>
-            ) : (
-              <button
-                key={q.id}
-                className={`botao grande${quartoId === q.id ? ' selecionado' : ''}`}
-                aria-pressed={quartoId === q.id}
-                onClick={() => {
-                  setQuartoId(q.id);
-                  if (pessoas > q.capacidade) setPessoas(q.capacidade);
-                }}
-              >
-                {q.codigo}
-                <span className="pequeno" style={{ fontWeight: 400 }}>
-                  &nbsp;até {q.capacidade}
-                </span>
-              </button>
-            ),
-          )}
-        </div>
+            ))}
+          </div>
+        )}
         {disp.data && quartosMostrados.length === 0 && <p className="erro-form">Nenhum quarto livre nessas datas.</p>}
         {quarto && !quarto.livre && <p className="erro-form">O quarto {quarto.codigo} está ocupado nessas datas ({quarto.ocupadoPor}).</p>}
-        {ocupados.length > 0 && <p className="suave pequeno">Ocupados: {ocupados.map((q) => q.codigo).join(', ')}</p>}
-      </div>
+        {ocupados.length > 0 && (
+          <p className="suave pequeno ocupados">
+            <BedDouble aria-hidden="true" />
+            Ocupados: {ocupados.map((q) => q.codigo).join(', ')}
+          </p>
+        )}
+      </Passo>
 
-      <div className="cartao passo">
-        <span className="rotulo">4. Pessoas e diária</span>
+      <Passo numero={4} rotulo="Pessoas e diária" feito={feito4}>
         <Escolha
           rotulo="Número de pessoas"
           valor={pessoas}
@@ -443,44 +510,49 @@ export function NovaHospedagem() {
             texto: i === 0 ? '1 pessoa' : `${i + 1}`,
           }))}
         />
-        <div className="botoes" style={{ marginTop: 12 }}>
-          <span style={{ fontSize: '1.2rem' }}>
-            Diária: <Dinheiro valor={diaria} className="forte" />
-            {valorEditado === null && <span className="suave pequeno"> (tabela)</span>}
-          </span>
-          {!editandoValor && (
-            <button className="botao pequeno" onClick={() => setEditandoValor(true)}>
-              Mudar valor
-            </button>
-          )}
-        </div>
-        {editandoValor && (
-          <div className="linha-campos" style={{ marginTop: 8 }}>
-            <CampoReais id="diaria" rotulo="Diária combinada" valor={diaria} aoMudar={(v) => setValorEditado(v ?? 0)} />
-            <div className="campo">
-              <label htmlFor="motivo">Motivo (opcional)</label>
-              <input id="motivo" value={motivo} placeholder="Ex.: cliente fixo" onChange={(e) => setMotivo(e.target.value)} />
-            </div>
+        <div className="conta-diaria">
+          <div className="botoes">
+            <span className="linha-diaria">
+              Diária: <Dinheiro valor={diaria} className="forte" />
+              {valorEditado === null && <span className="suave pequeno"> (tabela)</span>}
+            </span>
+            {!editandoValor && (
+              <button className="botao pequeno" onClick={() => setEditandoValor(true)}>
+                <Pencil aria-hidden="true" />
+                Mudar valor
+              </button>
+            )}
           </div>
-        )}
-        <p style={{ fontSize: '1.25rem', marginTop: 8 }}>
-          Total: {noites(qtdNoites)} × {emReais(diaria)} = <Dinheiro valor={total} className="forte" />
-        </p>
-      </div>
+          {editandoValor && (
+            <div className="linha-campos" style={{ marginTop: 12 }}>
+              <CampoReais id="diaria" rotulo="Diária combinada" valor={diaria} aoMudar={(v) => setValorEditado(v ?? 0)} />
+              <div className="campo">
+                <label htmlFor="motivo">Motivo (opcional)</label>
+                <input id="motivo" value={motivo} placeholder="Ex.: cliente fixo" onChange={(e) => setMotivo(e.target.value)} />
+              </div>
+            </div>
+          )}
+          <p className="linha-total">
+            <span>
+              Total: {noites(qtdNoites)} × {emReais(diaria)} =
+            </span>{' '}
+            <Dinheiro valor={total} className="valor-total" />
+          </p>
+        </div>
+      </Passo>
 
-      <div className="cartao passo">
-        <span className="rotulo">5. Pagamento</span>
+      <Passo numero={5} rotulo="Pagamento" feito={feito5}>
         <Escolha
           rotulo="Pagamento agora?"
           valor={pagarAgora ? 'sim' : 'nao'}
           aoEscolher={(v) => setPagarAgora(v === 'sim')}
           opcoes={[
-            { valor: 'sim', texto: 'Recebi agora' },
-            { valor: 'nao', texto: 'Paga depois' },
+            { valor: 'sim', texto: 'Recebi agora', icone: HandCoins },
+            { valor: 'nao', texto: 'Paga depois', icone: Clock },
           ]}
         />
         {pagarAgora && (
-          <div style={{ marginTop: 12 }}>
+          <div style={{ marginTop: 16 }}>
             <CamposPagamento
               idBase="nova"
               valor={pag}
@@ -491,30 +563,30 @@ export function NovaHospedagem() {
             />
           </div>
         )}
-      </div>
+      </Passo>
 
-      <div className="cartao">
-        <button className="botao pequeno" onClick={() => setMaisOpcoes(!maisOpcoes)} aria-expanded={maisOpcoes}>
+      <div className="cartao mais-opcoes">
+        <button className="botao" onClick={() => setMaisOpcoes(!maisOpcoes)} aria-expanded={maisOpcoes}>
+          {maisOpcoes ? <ChevronUp aria-hidden="true" /> : <ChevronDown aria-hidden="true" />}
           {maisOpcoes ? 'Menos opções' : 'Mais opções (reserva, WhatsApp, observação)'}
         </button>
         {maisOpcoes && (
-          <div style={{ marginTop: 12 }}>
+          <div style={{ marginTop: 16 }}>
             {!futura && (
               <label className="marcar">
                 <input type="checkbox" checked={jaChegou} onChange={(e) => setJaChegou(e.target.checked)} />
                 O hóspede já está aqui (se não, fica como reserva para hoje)
               </label>
             )}
-            <div className="campo">
+            <div className="campo" style={{ marginTop: 8 }}>
               <span className="rotulo">Como reservou</span>
               <Escolha
                 rotulo="Como reservou"
-                grande={false}
                 valor={origem}
                 aoEscolher={setOrigem}
                 opcoes={[
-                  { valor: 'balcao', texto: 'No balcão' },
-                  { valor: 'whatsapp', texto: 'WhatsApp' },
+                  { valor: 'balcao', texto: 'No balcão', icone: ConciergeBell },
+                  { valor: 'whatsapp', texto: 'WhatsApp', icone: MessageCircle },
                 ]}
               />
             </div>
@@ -534,9 +606,14 @@ export function NovaHospedagem() {
 
       <MensagemErro erro={erro} />
       <button className="botao principal enorme" disabled={salvando} onClick={salvar}>
-        {futura || (maisOpcoes && !jaChegou) ? 'Salvar reserva' : 'Salvar hospedagem'}
-        {pagarAgora && pag.valor ? ` e receber ${emReais(pag.valor)}` : ''}
+        <span className="bolha" aria-hidden="true">
+          <Check />
+        </span>
+        <span>
+          {futura || (maisOpcoes && !jaChegou) ? 'Salvar reserva' : 'Salvar hospedagem'}
+          {pagarAgora && pag.valor ? ` e receber ${emReais(pag.valor)}` : ''}
+        </span>
       </button>
-    </>
+    </div>
   );
 }

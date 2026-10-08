@@ -1,11 +1,49 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  ArrowLeftRight,
+  Ban,
+  BedDouble,
+  CalendarCheck,
+  CalendarDays,
+  CalendarPlus,
+  Check,
+  ChevronLeft,
+  CircleAlert,
+  CircleCheck,
+  Clock,
+  HandCoins,
+  History,
+  IdCard,
+  LogIn,
+  LogOut,
+  MapPin,
+  MessageCircle,
+  Pencil,
+  Phone,
+  Repeat,
+  StickyNote,
+  Undo2,
+  UserRound,
+  Users,
+  Wallet,
+  type LucideIcon,
+} from 'lucide-react';
 import { api } from '../api';
-import { CampoReais, Carregando, Dinheiro, Escolha, Etiqueta, MensagemErro, type Estado } from '../componentes/Basicos';
-import { CamposPagamento, preferenciaPagamento, textoPagamento, useAcoesRapidas, useContasRecebedoras, type Pagamento } from '../componentes/AcoesEstadia';
+import { CampoReais, Carregando, ChipIcone, Dinheiro, Escolha, Etiqueta, MensagemErro, TituloTela, type Estado } from '../componentes/Basicos';
+import {
+  CamposPagamento,
+  ICONE_FORMA,
+  preferenciaPagamento,
+  textoPagamento,
+  useAcoesRapidas,
+  useContasRecebedoras,
+  type Pagamento,
+} from '../componentes/AcoesEstadia';
 import { Janela, useInteracao } from '../componentes/Interacao';
-import { data, dataCurta, dataHora, diaDaSemana, documento, emReais, FORMAS, noites, somarDias, telefone } from '../formato';
+import { data, dataCurta, dataHora, diaDaSemana, documento, emReais, FORMAS, nomeProprio, noites, somarDias, telefone } from '../formato';
+import '../estilo/hospedagem.css';
 
 export interface DetalheEstadia {
   estadia: {
@@ -65,6 +103,19 @@ export function linkWhatsapp(tel: string): string | null {
   return `https://wa.me/${d}`;
 }
 
+/** Uma linha de informação com ícone: "Telefone (69) 9…", "Chegou 07/10 14:00". */
+function Info({ icone: Icone, rotulo, children }: { icone: LucideIcon; rotulo?: string; children: ReactNode }) {
+  return (
+    <li className="linha-info">
+      <Icone aria-hidden="true" />
+      <span>
+        {rotulo && <span className="rotulo-info">{rotulo} </span>}
+        {children}
+      </span>
+    </li>
+  );
+}
+
 export function TelaEstadia() {
   const { id } = useParams();
   const dados = useQuery({ queryKey: ['estadia', id], queryFn: () => api.get<DetalheEstadia>(`/api/estadias/${id}`) });
@@ -77,10 +128,12 @@ export function TelaEstadia() {
   if (dados.error) return <MensagemErro erro={dados.error} />;
   const d = dados.data!;
   const e = d.estadia;
-  const st = STATUS[e.status];
+  const st = STATUS[e.status] ?? { texto: e.status, estado: 'neutro' as Estado };
   const ativa = e.status === 'confirmada' || e.status === 'hospedado';
   const wa = linkWhatsapp(d.hospede.telefone);
   const atrasoSaida = e.status === 'hospedado' && e.data_saida <= d.hoje;
+  const nome = nomeProprio(d.hospede.nome);
+  const origem = e.origem === 'whatsapp' ? 'WhatsApp' : e.origem === 'link' ? 'site' : e.origem === 'planilha' ? 'planilha antiga' : 'balcão';
 
   async function desfazerPagamento(pid: number, valor: number) {
     const ok = await confirmar({
@@ -88,6 +141,7 @@ export function TelaEstadia() {
       mensagem: `O pagamento de ${emReais(valor)} deixa de contar no caixa. Fica registrado que foi desfeito.`,
       confirmar: 'Desfazer pagamento',
       perigo: true,
+      icone: Undo2,
     });
     if (!ok) return;
     try {
@@ -100,146 +154,285 @@ export function TelaEstadia() {
   }
 
   return (
-    <>
-      <div className="titulo-tela">
-        <div>
-          <h1>
-            {d.hospede.nome} <Etiqueta estado={atrasoSaida ? 'atrasado' : st.estado}>{atrasoSaida ? 'Saída atrasada' : st.texto}</Etiqueta>
-          </h1>
-          <div className="suave">
+    <div className="tela-estadia">
+      <TituloTela
+        titulo={
+          <>
+            <span className="chaveiro" aria-hidden="true">
+              {d.quarto.codigo}
+            </span>
+            <span className="titulo-estadia">
+              <span className="nome-estadia">{nome}</span>
+              <Etiqueta estado={atrasoSaida ? 'atrasado' : st.estado}>{atrasoSaida ? 'Saída atrasada' : st.texto}</Etiqueta>
+            </span>
+          </>
+        }
+        subtitulo={
+          <>
             Quarto <strong>{d.quarto.codigo}</strong> · {noites(d.noites.length)} · {e.pessoas} {e.pessoas === 1 ? 'pessoa' : 'pessoas'} · entra{' '}
             {diaDaSemana(e.data_entrada)} {data(e.data_entrada)}, sai {diaDaSemana(e.data_saida)} {data(e.data_saida)}
-          </div>
-        </div>
+          </>
+        }
+      >
         <Link to="/" className="botao">
+          <ChevronLeft aria-hidden="true" />
           Voltar
         </Link>
+      </TituloTela>
+
+      <div className="grade-4 numeros-estadia">
+        <div className="numero-grande tom-ocupado">
+          <span className="valor">{emReais(d.total)}</span>
+          <span className="rotulo">Total</span>
+        </div>
+        <div className="numero-grande tom-caixa">
+          <span className="valor">{emReais(d.pago)}</span>
+          <span className="rotulo">Pago</span>
+        </div>
+        <div className={`numero-grande ${d.saldo > 0 ? 'tom-perigo falta' : 'tom-caixa'}`}>
+          <span className="valor">{emReais(Math.max(0, d.saldo))}</span>
+          <span className="rotulo">
+            {d.saldo > 0 ? <CircleAlert aria-hidden="true" /> : <CircleCheck aria-hidden="true" />}
+            {d.saldo > 0 ? 'Falta pagar' : d.saldo < 0 ? `Pagou a mais ${emReais(-d.saldo)}` : 'Tudo pago'}
+          </span>
+        </div>
+        <div className="numero-grande tom-config">
+          <span className="valor">{emReais(e.valor_diaria)}</span>
+          <span className="rotulo">Diária{e.motivo_valor ? ` (${e.motivo_valor})` : ''}</span>
+        </div>
       </div>
 
-      <div className="grade-4">
-        <div className="numero-grande">
-          <div className="valor">{emReais(d.total)}</div>
-          <div className="rotulo">Total</div>
-        </div>
-        <div className="numero-grande">
-          <div className="valor" style={{ color: 'var(--verde-escuro)' }}>
-            {emReais(d.pago)}
-          </div>
-          <div className="rotulo">Pago</div>
-        </div>
-        <div className="numero-grande" style={d.saldo > 0 ? { borderColor: 'var(--vermelho-alerta)', borderWidth: 2 } : {}}>
-          <div className="valor" style={{ color: d.saldo > 0 ? 'var(--vermelho-alerta)' : 'var(--verde-escuro)' }}>
-            {emReais(Math.max(0, d.saldo))}
-          </div>
-          <div className="rotulo">{d.saldo > 0 ? 'Falta pagar' : d.saldo < 0 ? `Pagou a mais ${emReais(-d.saldo)}` : 'Tudo pago'}</div>
-        </div>
-        <div className="numero-grande">
-          <div className="valor">{emReais(e.valor_diaria)}</div>
-          <div className="rotulo">Diária{e.motivo_valor ? ` (${e.motivo_valor})` : ''}</div>
-        </div>
-      </div>
-
-      <div className="cartao">
-        <div className="botoes">
+      {!['cancelada', 'expirada'].includes(e.status) && (
+      <div className="cartao acoes-estadia">
+        <div className="botoes acoes-principais">
           {e.status === 'confirmada' && (
-            <button className="botao principal grande" disabled={e.data_entrada > d.hoje} onClick={() => acoes.chegou(e.id, d.hospede.nome)}>
+            <button className="botao principal grande largo" disabled={e.data_entrada > d.hoje} onClick={() => acoes.chegou(e.id, d.hospede.nome)}>
+              <LogIn aria-hidden="true" />
               Chegou
             </button>
           )}
           {e.status === 'hospedado' && (
-            <button className="botao principal grande" onClick={() => acoes.saiu({ id: e.id, nome: d.hospede.nome })}>
+            <button className="botao principal grande largo" onClick={() => acoes.saiu({ id: e.id, nome: d.hospede.nome })}>
+              <LogOut aria-hidden="true" />
               Saiu
             </button>
           )}
           {!['cancelada', 'expirada'].includes(e.status) && (
-            <button className={`botao grande${d.saldo > 0 ? ' verde principal' : ''}`} onClick={() => acoes.receber(e.id, d.hospede.nome, d.saldo)}>
+            <button
+              className={`botao grande verde largo${d.saldo > 0 ? ' principal' : ''}`}
+              onClick={() => acoes.receber(e.id, d.hospede.nome, d.saldo)}
+            >
+              <HandCoins aria-hidden="true" />
               Recebi
             </button>
           )}
-          {ativa && (
-            <>
-              <button className="botao grande" onClick={() => setJanela('estender')}>
-                Mais noites
-              </button>
-              <button className="botao grande" onClick={() => setJanela('trocar')}>
-                Trocar quarto
-              </button>
-              <button className="botao grande" onClick={() => setJanela('editar')}>
-                Mudar dados
-              </button>
-              <button className="botao grande perigo" onClick={() => setJanela('cancelar')}>
-                {e.status === 'confirmada' ? 'Cancelar / não veio' : 'Cancelar'}
-              </button>
-            </>
-          )}
         </div>
+        {ativa && (
+          <div className="botoes acoes-outras">
+            <button className="botao" onClick={() => setJanela('estender')}>
+              <CalendarPlus aria-hidden="true" />
+              Mais noites
+            </button>
+            <button className="botao" onClick={() => setJanela('trocar')}>
+              <ArrowLeftRight aria-hidden="true" />
+              Trocar quarto
+            </button>
+            <button className="botao" onClick={() => setJanela('editar')}>
+              <Pencil aria-hidden="true" />
+              Mudar dados
+            </button>
+            <button className="botao perigo cancelar" onClick={() => setJanela('cancelar')}>
+              <Ban aria-hidden="true" />
+              {e.status === 'confirmada' ? 'Cancelar / não veio' : 'Cancelar'}
+            </button>
+          </div>
+        )}
       </div>
+      )}
+
+      <section className="cartao">
+        <div className="cartao-topo">
+          <ChipIcone icone={Wallet} tom="tom-caixa" />
+          <h2>Pagamentos</h2>
+        </div>
+        {d.pagamentos.length === 0 ? (
+          <p className="vazio">Nenhum pagamento.</p>
+        ) : (
+          <div className="rolagem-x">
+            <table className="tabela tabela-pagamentos">
+              <thead>
+                <tr>
+                  <th scope="col">Quando</th>
+                  <th scope="col">Como pagou</th>
+                  <th scope="col" className="numero">
+                    Valor
+                  </th>
+                  <th scope="col">
+                    <span className="oculto-leitor">Ação</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {d.pagamentos.map((p) => {
+                  const IconeForma = ICONE_FORMA[p.forma];
+                  return (
+                    <tr key={p.id} className={p.cancelado_em ? 'desfeito' : ''}>
+                      <td className="quando">
+                        <span className="forte">{data(p.data)}</span>
+                        <span className="suave">
+                          {TIPOS[p.tipo] ?? p.tipo}
+                          {p.obs ? ` · ${p.obs}` : ''}
+                        </span>
+                      </td>
+                      <td className="como">
+                        <span className="forma">
+                          {IconeForma && <IconeForma aria-hidden="true" />}
+                          {FORMAS[p.forma] ?? p.forma}
+                          {p.conta ? ` · ${p.conta_nome}` : ''}
+                        </span>
+                      </td>
+                      <td className="valor numero">
+                        {p.tipo === 'devolucao' ? '−' : ''}
+                        <Dinheiro valor={p.valor} />
+                      </td>
+                      <td className="acao">
+                        {p.cancelado_em ? (
+                          <Etiqueta estado="neutro">Desfeito</Etiqueta>
+                        ) : (
+                          <button className="botao pequeno" onClick={() => desfazerPagamento(p.id, p.valor)}>
+                            <Undo2 aria-hidden="true" />
+                            Desfazer
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
 
       <div className="grade-2">
-        <div className="cartao">
-          <h2>Pagamentos</h2>
-          {d.pagamentos.length === 0 && <p className="vazio">Nenhum pagamento.</p>}
-          <ul className="lista">
-            {d.pagamentos.map((p) => (
-              <li key={p.id} style={p.cancelado_em ? { opacity: 0.6 } : {}}>
-                <div className="principal-item">
-                  <div className="nome" style={p.cancelado_em ? { textDecoration: 'line-through' } : {}}>
-                    {p.tipo === 'devolucao' ? '−' : ''}
-                    <Dinheiro valor={p.valor} /> · {FORMAS[p.forma]}
-                    {p.conta ? ` · ${p.conta_nome}` : ''}
-                  </div>
-                  <div className="suave pequeno">
-                    {TIPOS[p.tipo]} em {data(p.data)}
-                    {p.obs ? ` · ${p.obs}` : ''}
-                  </div>
-                </div>
-                {p.cancelado_em ? (
-                  <Etiqueta estado="neutro">Desfeito</Etiqueta>
-                ) : (
-                  <button className="botao pequeno" onClick={() => desfazerPagamento(p.id, p.valor)}>
-                    Desfazer
-                  </button>
-                )}
-              </li>
-            ))}
-          </ul>
+        <div>
+          <section className="cartao">
+            <div className="cartao-topo">
+              <ChipIcone icone={UserRound} tom="tom-ocupado" />
+              <h2>Hóspede</h2>
+            </div>
+            <p className="nome-hospede">
+              <Link to={`/quartos/hospedes/${d.hospede.id}`}>{nome}</Link>
+            </p>
+            <ul className="lista-info">
+              {telefone(d.hospede.telefone) && <Info icone={Phone}>{telefone(d.hospede.telefone)}</Info>}
+              {documento(d.hospede.cpf_cnpj) && <Info icone={IdCard}>{documento(d.hospede.cpf_cnpj)}</Info>}
+              {(d.hospede.cidade || d.hospede.uf) && (
+                <Info icone={MapPin}>{[nomeProprio(d.hospede.cidade), d.hospede.uf].filter(Boolean).join('/')}</Info>
+              )}
+              <Info icone={Repeat}>
+                Veio {d.visitas} {d.visitas === 1 ? 'vez' : 'vezes'}
+              </Info>
+            </ul>
+            {wa && (
+              <a className="botao verde" href={wa} target="_blank" rel="noreferrer">
+                <MessageCircle aria-hidden="true" />
+                Mandar WhatsApp
+              </a>
+            )}
+          </section>
+
+          <section className="cartao">
+            <div className="cartao-topo">
+              <ChipIcone icone={History} tom="tom-config" />
+              <h2>Histórico</h2>
+            </div>
+            <ul className="lista-info">
+              <Info icone={e.origem === 'whatsapp' ? MessageCircle : CalendarCheck} rotulo="Reservou:">
+                {origem}
+              </Info>
+              {e.hora_chegada_prevista && (
+                <Info icone={Clock} rotulo="Chegada prevista:">
+                  {e.hora_chegada_prevista}
+                </Info>
+              )}
+              {e.chegada_real_em && (
+                <Info icone={LogIn} rotulo="Chegou:">
+                  {dataHora(e.chegada_real_em)}
+                </Info>
+              )}
+              {e.saida_real_em && (
+                <Info icone={LogOut} rotulo="Saiu:">
+                  {dataHora(e.saida_real_em)}
+                </Info>
+              )}
+              {e.cancelada_em && (
+                <Info icone={Ban} rotulo="Cancelada:">
+                  {dataHora(e.cancelada_em)}
+                </Info>
+              )}
+            </ul>
+            {e.obs && (
+              <div className="obs-estadia">
+                <StickyNote aria-hidden="true" />
+                <p>
+                  <strong>Observação:</strong> {e.obs}
+                </p>
+              </div>
+            )}
+          </section>
         </div>
 
-        <div className="cartao">
-          <h2>Hóspede</h2>
-          <p className="nome">
-            <Link to={`/quartos/hospedes/${d.hospede.id}`}>{d.hospede.nome}</Link>
+        <section className="cartao">
+          <div className="cartao-topo">
+            <ChipIcone icone={CalendarDays} tom="tom-chega" />
+            <h2>Datas</h2>
+          </div>
+          <div className="marcos">
+            <div className="marco">
+              <ChipIcone icone={LogIn} tom="tom-chega" />
+              <div>
+                <span className="rotulo-info">Entrada · {diaDaSemana(e.data_entrada)}</span>
+                <span className="data-marco">{data(e.data_entrada)}</span>
+              </div>
+            </div>
+            <div className="marco">
+              <ChipIcone icone={LogOut} tom="tom-sai" />
+              <div>
+                <span className="rotulo-info">Saída · {diaDaSemana(e.data_saida)}</span>
+                <span className="data-marco">{data(e.data_saida)}</span>
+              </div>
+            </div>
+          </div>
+          <p className="resumo-datas">
+            <BedDouble aria-hidden="true" />
+            {noites(d.noites.length)} no quarto {d.quarto.codigo}
+            <Users aria-hidden="true" />
+            {e.pessoas} {e.pessoas === 1 ? 'pessoa' : 'pessoas'}
           </p>
-          <p className="suave">
-            {[telefone(d.hospede.telefone), documento(d.hospede.cpf_cnpj), [d.hospede.cidade, d.hospede.uf].filter(Boolean).join('/')]
-              .filter(Boolean)
-              .join(' · ')}
-          </p>
-          <p>
-            Veio {d.visitas} {d.visitas === 1 ? 'vez' : 'vezes'}
-          </p>
-          {wa && (
-            <a className="botao verde" href={wa} target="_blank" rel="noreferrer">
-              Mandar WhatsApp
-            </a>
-          )}
-          <h3 style={{ marginTop: 16 }}>Detalhes</h3>
-          <ul className="pequeno" style={{ paddingLeft: 18 }}>
-            <li>Reservou: {e.origem === 'whatsapp' ? 'WhatsApp' : e.origem === 'link' ? 'site' : e.origem === 'planilha' ? 'planilha antiga' : 'balcão'}</li>
-            {e.hora_chegada_prevista && <li>Chegada prevista: {e.hora_chegada_prevista}</li>}
-            {e.chegada_real_em && <li>Chegou: {dataHora(e.chegada_real_em)}</li>}
-            {e.saida_real_em && <li>Saiu: {dataHora(e.saida_real_em)}</li>}
-            {e.cancelada_em && <li>Cancelada: {dataHora(e.cancelada_em)}</li>}
-            <li>
-              Noites: {d.noites.map((n) => `${dataCurta(n.data)} (${emReais(n.valor)})`).join(', ')}
-            </li>
-          </ul>
-          {e.obs && (
-            <p style={{ whiteSpace: 'pre-line' }} className="pequeno">
-              <strong>Observação:</strong> {e.obs}
-            </p>
-          )}
-        </div>
+          <table className="tabela tabela-noites">
+            <thead>
+              <tr>
+                <th scope="col">Noite</th>
+                <th scope="col">Dia</th>
+                <th scope="col" className="numero">
+                  Valor
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {d.noites.map((n) => (
+                <tr key={n.data}>
+                  <td className="forte">{dataCurta(n.data)}</td>
+                  <td>{diaDaSemana(n.data)}</td>
+                  <td className="numero">
+                    <Dinheiro valor={n.valor} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
       </div>
 
       {acoes.janela}
@@ -247,7 +440,7 @@ export function TelaEstadia() {
       {janela === 'trocar' && <JanelaTrocar d={d} aoFechar={() => setJanela(null)} />}
       {janela === 'cancelar' && <JanelaCancelar d={d} aoFechar={() => setJanela(null)} />}
       {janela === 'editar' && <JanelaEditar d={d} aoFechar={() => setJanela(null)} />}
-    </>
+    </div>
   );
 }
 
@@ -274,15 +467,16 @@ function JanelaEstender({ d, aoFechar }: { d: DetalheEstadia; aoFechar: () => vo
   const { erro, executar } = useAcao(aoFechar);
   const novaSaida = somarDias(d.estadia.data_saida, mais);
   return (
-    <Janela titulo="Mais noites" aoFechar={aoFechar}>
+    <Janela titulo="Mais noites" aoFechar={aoFechar} icone={CalendarPlus}>
       <Escolha
         rotulo="Quantas noites a mais"
         valor={mais}
         aoEscolher={setMais}
         opcoes={[1, 2, 3, 4, 5, 7].map((n) => ({ valor: n, texto: `+${n}` }))}
       />
-      <p className="mensagem" style={{ marginTop: 12 }}>
-        Nova saída: <strong>{diaDaSemana(novaSaida)}, {data(novaSaida)}</strong>. Fica {emReais(mais * d.estadia.valor_diaria)} a mais.
+      <p className="texto-janela">
+        Nova saída: <strong>{diaDaSemana(novaSaida)}, {data(novaSaida)}</strong>. Fica <strong>{emReais(mais * d.estadia.valor_diaria)}</strong> a
+        mais.
       </p>
       <MensagemErro erro={erro} />
       <div className="botoes direita">
@@ -293,6 +487,7 @@ function JanelaEstender({ d, aoFechar }: { d: DetalheEstadia; aoFechar: () => vo
           className="botao grande principal"
           onClick={() => executar(() => api.post(`/api/estadias/${d.estadia.id}/estender`, { novaSaida }), `Agora sai em ${data(novaSaida)}.`)}
         >
+          <Check aria-hidden="true" />
           Confirmar
         </button>
       </div>
@@ -312,8 +507,10 @@ function JanelaTrocar({ d, aoFechar }: { d: DetalheEstadia; aoFechar: () => void
   const { erro, executar } = useAcao(aoFechar);
   const livres = (disp.data?.quartos ?? []).filter((q) => q.livre && q.id !== e.quarto_id && q.capacidade >= e.pessoas);
   return (
-    <Janela titulo="Trocar de quarto" aoFechar={aoFechar}>
-      <p>Quartos livres de {dataCurta(e.data_entrada)} a {dataCurta(e.data_saida)}:</p>
+    <Janela titulo="Trocar de quarto" aoFechar={aoFechar} icone={ArrowLeftRight}>
+      <p className="texto-janela">
+        Quartos livres de {dataCurta(e.data_entrada)} a {dataCurta(e.data_saida)}:
+      </p>
       <div className="botoes">
         {livres.map((q) => (
           <button
@@ -321,6 +518,7 @@ function JanelaTrocar({ d, aoFechar }: { d: DetalheEstadia; aoFechar: () => void
             className="botao grande"
             onClick={() => executar(() => api.post(`/api/estadias/${e.id}/trocar-quarto`, { quartoId: q.id }), `Trocado para o quarto ${q.codigo}.`)}
           >
+            <BedDouble aria-hidden="true" />
             {q.codigo}
           </button>
         ))}
@@ -351,9 +549,9 @@ function JanelaCancelar({ d, aoFechar }: { d: DetalheEstadia; aoFechar: () => vo
   async function enviar() {
     const msg =
       tipo === 'nao_veio'
-        ? `Marcar que ${d.hospede.nome} não veio?${d.pago > 0 ? ` O que foi pago (${emReais(d.pago)}) fica como garantia.` : ''}`
-        : `Cancelar a hospedagem de ${d.hospede.nome}?${devolver && dev.valor ? ` Devolver ${textoPagamento(dev, contas.data?.contas)}.` : ''}`;
-    const ok = await confirmar({ titulo: 'Confirmar', mensagem: msg, confirmar: 'Sim', perigo: true });
+        ? `Marcar que ${nomeProprio(d.hospede.nome)} não veio?${d.pago > 0 ? ` O que foi pago (${emReais(d.pago)}) fica como garantia.` : ''}`
+        : `Cancelar a hospedagem de ${nomeProprio(d.hospede.nome)}?${devolver && dev.valor ? ` Devolver ${textoPagamento(dev, contas.data?.contas)}.` : ''}`;
+    const ok = await confirmar({ titulo: 'Confirmar', mensagem: msg, confirmar: 'Sim', perigo: true, icone: Ban });
     if (!ok) return;
     executar(
       () =>
@@ -366,7 +564,7 @@ function JanelaCancelar({ d, aoFechar }: { d: DetalheEstadia; aoFechar: () => vo
     );
   }
   return (
-    <Janela titulo="Cancelar" aoFechar={aoFechar}>
+    <Janela titulo="Cancelar" aoFechar={aoFechar} icone={Ban} tom="tom-perigo">
       {podeNaoVeio && (
         <Escolha
           rotulo="O que aconteceu"
@@ -384,8 +582,9 @@ function JanelaCancelar({ d, aoFechar }: { d: DetalheEstadia; aoFechar: () => vo
       </div>
       {tipo === 'cancelar' && d.pago > 0 && (
         <>
-          <p className="suave">
-            Foi pago {emReais(d.pago)}. Pela política, o sinal só é devolvido se a reserva foi feita pelo site e cancelada em até 7 dias.
+          <p className="suave texto-janela">
+            Foi pago <strong>{emReais(d.pago)}</strong>. Pela política, o sinal só é devolvido se a reserva foi feita pelo site e cancelada em até 7
+            dias.
           </p>
           <label className="marcar">
             <input type="checkbox" checked={devolver} onChange={(ev) => setDevolver(ev.target.checked)} />
@@ -400,6 +599,7 @@ function JanelaCancelar({ d, aoFechar }: { d: DetalheEstadia; aoFechar: () => vo
           Voltar
         </button>
         <button className="botao grande principal perigo" onClick={enviar}>
+          <Ban aria-hidden="true" />
           {tipo === 'nao_veio' ? 'Marcar não veio' : 'Cancelar hospedagem'}
         </button>
       </div>
@@ -416,7 +616,7 @@ function JanelaEditar({ d, aoFechar }: { d: DetalheEstadia; aoFechar: () => void
   const [obs, setObs] = useState(e.obs);
   const { erro, executar } = useAcao(aoFechar);
   return (
-    <Janela titulo="Mudar dados da hospedagem" aoFechar={aoFechar}>
+    <Janela titulo="Mudar dados da hospedagem" aoFechar={aoFechar} icone={Pencil}>
       <div className="campo">
         <span className="rotulo">Pessoas</span>
         <Escolha
@@ -460,6 +660,7 @@ function JanelaEditar({ d, aoFechar }: { d: DetalheEstadia; aoFechar: () => void
             )
           }
         >
+          <Check aria-hidden="true" />
           Salvar
         </button>
       </div>

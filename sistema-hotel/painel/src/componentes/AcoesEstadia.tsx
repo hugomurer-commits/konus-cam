@@ -1,9 +1,11 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Banknote, CalendarX, CircleAlert, CreditCard, HandCoins, LogOut, QrCode, type LucideIcon } from 'lucide-react';
 import { api } from '../api';
-import { emReais, FORMAS, dataCurta, noites } from '../formato';
+import { emReais, FORMAS, dataCurta, nomeProprio, noites } from '../formato';
 import { CampoReais, Escolha, MensagemErro } from './Basicos';
 import { Janela, useInteracao } from './Interacao';
+import '../estilo/hospedagem.css';
 
 export type Forma = 'pix' | 'cartao' | 'dinheiro';
 
@@ -46,6 +48,9 @@ export interface Pagamento {
   contaRecebedoraId: number | null;
 }
 
+/** Ícone de cada forma de pagamento (Pix, Cartão, Dinheiro). */
+export const ICONE_FORMA: Record<string, LucideIcon> = { pix: QrCode, cartao: CreditCard, dinheiro: Banknote };
+
 /** Forma (Pix/Cartão/Dinheiro) + quem recebeu (H/V/N) + valor. */
 export function CamposPagamento({ valor, aoMudar, idBase }: { valor: Pagamento; aoMudar: (p: Pagamento) => void; idBase: string }) {
   const contas = useContasRecebedoras();
@@ -62,7 +67,7 @@ export function CamposPagamento({ valor, aoMudar, idBase }: { valor: Pagamento; 
           rotulo="Forma de pagamento"
           valor={valor.forma}
           aoEscolher={(forma) => aoMudar({ ...valor, forma })}
-          opcoes={(['pix', 'cartao', 'dinheiro'] as Forma[]).map((f) => ({ valor: f, texto: FORMAS[f] }))}
+          opcoes={(['pix', 'cartao', 'dinheiro'] as Forma[]).map((f) => ({ valor: f, texto: FORMAS[f], icone: ICONE_FORMA[f] }))}
         />
       </div>
       <div className="campo">
@@ -84,6 +89,19 @@ export function CamposPagamento({ valor, aoMudar, idBase }: { valor: Pagamento; 
 export function textoPagamento(p: Pagamento, contas: ContaRecebedora[] | undefined): string {
   const conta = contas?.find((c) => c.id === p.contaRecebedoraId);
   return `${emReais(p.valor)} em ${FORMAS[p.forma]}${conta ? ` (${conta.nome})` : ''}`;
+}
+
+/** Detalhe do recibo da confirmação: ícone da forma + "em Pix · Hugo". */
+export function detalhePagamento(p: Pagamento, contas: ContaRecebedora[] | undefined): ReactNode {
+  const conta = contas?.find((c) => c.id === p.contaRecebedoraId);
+  const Icone = ICONE_FORMA[p.forma];
+  return (
+    <>
+      {Icone && <Icone aria-hidden="true" />}
+      em {FORMAS[p.forma]}
+      {conta ? ` · ${conta.nome}` : ''}
+    </>
+  );
 }
 
 /** Janela "Recebi": confirma e registra; aviso com Desfazer. */
@@ -119,10 +137,13 @@ export function JanelaReceber({
       titulo: 'Confirmar pagamento',
       mensagem: (
         <>
-          Confirmar pagamento de <strong>{textoPagamento(p, contas.data?.contas)}</strong> de {nome}?
+          Confirmar o pagamento de <strong>{nomeProprio(nome)}</strong>?
         </>
       ),
       confirmar: 'Confirmar',
+      verde: true,
+      icone: HandCoins,
+      recibo: { valor: emReais(p.valor), detalhe: detalhePagamento(p, contas.data?.contas) },
     });
     if (!ok) return;
     try {
@@ -143,18 +164,18 @@ export function JanelaReceber({
   }
 
   return (
-    <Janela titulo={titulo} aoFechar={aoFechar}>
-      <p className="mensagem">
-        {nome}
+    <Janela titulo={titulo} aoFechar={aoFechar} icone={HandCoins} tom="tom-livre">
+      <div className="quem-paga">
+        <span className="forte">{nomeProprio(nome)}</span>
         {saldo > 0 ? (
-          <>
-            {' '}
-            · falta pagar <strong className="saldo-destaque">{emReais(saldo)}</strong>
-          </>
+          <span className="saldo falta">
+            <CircleAlert aria-hidden="true" />
+            Falta pagar {emReais(saldo)}
+          </span>
         ) : (
-          ' · nada a receber'
+          <span className="suave">nada a receber</span>
         )}
-      </p>
+      </div>
       <CamposPagamento valor={p} aoMudar={setP} idBase="receber" />
       <MensagemErro erro={erro} />
       <div className="botoes direita">
@@ -162,7 +183,8 @@ export function JanelaReceber({
         <button className="botao grande" onClick={aoFechar}>
           Voltar
         </button>
-        <button className="botao grande principal" onClick={salvar}>
+        <button className="botao grande verde principal" onClick={salvar}>
+          <HandCoins aria-hidden="true" />
           Recebi {p.valor ? emReais(p.valor) : ''}
         </button>
       </div>
@@ -188,7 +210,7 @@ export function useAcoesRapidas() {
     try {
       await api.post(`/api/estadias/${id}/chegou`);
       cliente.invalidateQueries();
-      avisar(`${nome} chegou.`);
+      avisar(`${nomeProprio(nome)} chegou.`);
     } catch (e) {
       avisar((e as Error).message, { erro: true });
     }
@@ -198,7 +220,7 @@ export function useAcoesRapidas() {
     try {
       await api.post(`/api/estadias/${e.id}/saiu`, { tirarNoitesNaoUsadas: tirar });
       cliente.invalidateQueries();
-      avisar(`${e.nome} saiu. Quarto marcado para limpar.`);
+      avisar(`${nomeProprio(e.nome)} saiu. Quarto marcado para limpar.`);
     } catch (err) {
       avisar((err as Error).message, { erro: true });
     }
@@ -213,9 +235,11 @@ export function useAcoesRapidas() {
     if (d.noitesNaoUsadas.length) {
       tirar = await confirmar({
         titulo: 'Saiu antes do previsto',
+        icone: CalendarX,
+        tom: 'tom-sai',
         mensagem: (
           <>
-            {e.nome} tinha mais {noites(d.noitesNaoUsadas.length)} ({d.noitesNaoUsadas.map(dataCurta).join(', ')}). Tirar da
+            {nomeProprio(e.nome)} tinha mais {noites(d.noitesNaoUsadas.length)} ({d.noitesNaoUsadas.map(dataCurta).join(', ')}). Tirar da
             conta as noites que não vai usar?
             <br />
             <span className="suave pequeno">A diária desta noite continua cobrada.</span>
@@ -231,7 +255,7 @@ export function useAcoesRapidas() {
     if (saldo > 0) {
       setJanela(
         <JanelaReceber
-          titulo={`${e.nome} vai sair: falta pagar`}
+          titulo={`${nomeProprio(e.nome)} vai sair: falta pagar`}
           estadiaId={e.id}
           nome={e.nome}
           saldo={saldo}
@@ -244,13 +268,19 @@ export function useAcoesRapidas() {
                 setJanela(null);
                 const ok = await confirmar({
                   titulo: 'Sair sem pagar?',
-                  mensagem: `${e.nome} vai sair devendo ${emReais(saldo)}. O saldo fica anotado na hospedagem.`,
+                  mensagem: (
+                    <>
+                      <strong>{nomeProprio(e.nome)}</strong> vai sair devendo <strong>{emReais(saldo)}</strong>. O saldo fica anotado
+                      na hospedagem.
+                    </>
+                  ),
                   confirmar: 'Saiu sem pagar',
                   perigo: true,
                 });
                 if (ok) registrarSaida(e, tirar);
               }}
             >
+              <LogOut aria-hidden="true" />
               Sair sem pagar
             </button>
           }
@@ -258,7 +288,17 @@ export function useAcoesRapidas() {
       );
       return;
     }
-    const ok = await confirmar({ titulo: 'Saiu', mensagem: `Confirmar a saída de ${e.nome}?`, confirmar: 'Saiu' });
+    const ok = await confirmar({
+      titulo: 'Saiu',
+      mensagem: (
+        <>
+          Confirmar a saída de <strong>{nomeProprio(e.nome)}</strong>?
+        </>
+      ),
+      confirmar: 'Saiu',
+      icone: LogOut,
+      tom: 'tom-sai',
+    });
     if (ok) registrarSaida(e, tirar);
   }
 

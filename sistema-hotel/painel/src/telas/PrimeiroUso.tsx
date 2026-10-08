@@ -1,8 +1,10 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
+import { ArrowRight } from 'lucide-react';
 import { api } from '../api';
 import { MensagemErro } from '../componentes/Basicos';
+import '../estilo/entrada-config.css';
 
 /** Primeiro passo do assistente: nome do hotel e senha de quem vai usar. */
 export function PrimeiroUso() {
@@ -27,34 +29,40 @@ export function PrimeiroUso() {
 
   return (
     <div className="tela-entrada">
-      <form className="caixa" onSubmit={enviar}>
-        <img className="logo" src="/logo.png" alt="" />
-        <h1>Bem-vindo!</h1>
-        <p className="suave">Vamos preparar o sistema. Primeiro, o nome do hotel e a senha de acesso.</p>
-        <div className="campo">
-          <label htmlFor="nomeHotel">Nome do hotel</label>
-          <input id="nomeHotel" value={f.nomeHotel} onChange={mudar('nomeHotel')} />
-        </div>
-        <div className="campo">
-          <label htmlFor="nome">Seu nome</label>
-          <input id="nome" value={f.nome} onChange={mudar('nome')} autoFocus />
-        </div>
-        <div className="campo">
-          <label htmlFor="login">Nome de acesso (para entrar)</label>
-          <input id="login" autoComplete="username" value={f.login} onChange={mudar('login')} />
-        </div>
-        <div className="campo">
-          <label htmlFor="senha">Senha</label>
-          <input id="senha" type="password" autoComplete="new-password" value={f.senha} onChange={mudar('senha')} />
-          <span className="ajuda">Pelo menos 8 caracteres. Anote num lugar seguro.</span>
-        </div>
-        <div className="campo">
-          <label htmlFor="senha2">Repita a senha</label>
-          <input id="senha2" type="password" autoComplete="new-password" value={f.senha2} onChange={mudar('senha2')} />
-        </div>
-        <MensagemErro erro={erro} />
-        <button className="botao principal enorme">Continuar</button>
-      </form>
+      <div className="entrada-coluna">
+        <form className="caixa" onSubmit={enviar}>
+          <img className="logo" src="/logo.png" alt="" />
+          <h1>Bem-vindo!</h1>
+          <p className="boas-vindas">Vamos preparar o sistema. Primeiro, o nome do hotel e a senha de acesso.</p>
+          <div className="campo">
+            <label htmlFor="nomeHotel">Nome do hotel</label>
+            <input id="nomeHotel" value={f.nomeHotel} onChange={mudar('nomeHotel')} />
+          </div>
+          <div className="campo">
+            <label htmlFor="nome">Seu nome</label>
+            <input id="nome" value={f.nome} onChange={mudar('nome')} autoFocus />
+          </div>
+          <div className="campo">
+            <label htmlFor="login">Nome de acesso (para entrar)</label>
+            <input id="login" autoComplete="username" value={f.login} onChange={mudar('login')} />
+          </div>
+          <div className="campo">
+            <label htmlFor="senha">Senha</label>
+            <input id="senha" type="password" autoComplete="new-password" value={f.senha} onChange={mudar('senha')} />
+            <span className="ajuda">Pelo menos 8 caracteres. Anote num lugar seguro.</span>
+          </div>
+          <div className="campo">
+            <label htmlFor="senha2">Repita a senha</label>
+            <input id="senha2" type="password" autoComplete="new-password" value={f.senha2} onChange={mudar('senha2')} />
+          </div>
+          <MensagemErro erro={erro} />
+          <button className="botao principal enorme botao-entrada">
+            Continuar
+            <ArrowRight aria-hidden="true" />
+          </button>
+        </form>
+        <p className="rodape">Hotel Tropical · Cacoal/RO</p>
+      </div>
     </div>
   );
 }
