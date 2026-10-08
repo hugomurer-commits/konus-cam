@@ -1,0 +1,21 @@
+{
+  "name": "sistema-hotel",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Sistema do Hotel Tropical: hospedagens, caixa e contas",
+  "workspaces": [
+    "servidor",
+    "painel"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w servidor & npm run dev -w painel",
+    "build": "npm run build -w painel && npm run build -w servidor",
+    "start": "node servidor/dist/servidor.mjs",
+    "test": "npm test -w servidor",
+    "typecheck": "npm run typecheck -w servidor && npm run typecheck -w painel",
+    "importar": "npm run importar -w servidor --"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

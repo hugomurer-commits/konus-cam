@@ -1,0 +1,10 @@
+node_modules/
+dist/
+# Banco, fotos e backups locais (no hotel ficam em C:\SistemaHotel\dados)
+dados/
+# Planilha original com dados de hóspedes (LGPD)
+dados-originais/
+# Pacote gerado para o instalador do Windows
+windows/pacote/
+windows/saida/
+*.log
