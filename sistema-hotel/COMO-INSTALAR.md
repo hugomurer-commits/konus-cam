@@ -2,19 +2,22 @@
 
 Você não precisa instalar nada de programação. É um arquivo só: **Instalar-Sistema-Hotel.exe**.
 
-## 1. Baixar o instalador (no seu computador)
+## 1. Baixar o instalador
 
-1. Entre no GitHub, no repositório **konus-cam** → aba **Actions** → **Instalador do hotel**.
-2. Clique na execução mais recente que estiver com o **✓ verde**.
-3. Lá embaixo, em **Artifacts**, clique em **Instalar-Sistema-Hotel**. Baixa um arquivo `.zip`.
-4. Abra o `.zip` e copie o **Instalar-Sistema-Hotel.exe** para um pendrive.
-5. Copie também para o pendrive a **planilha mais recente** do hotel (o arquivo do Excel).
+Abra este link no navegador (pode ser direto no PC do hotel). Ele baixa o **Instalar-Sistema-Hotel.exe**,
+sem precisar entrar no GitHub:
+
+**https://github.com/hugomurer-commits/konus-cam/releases/download/instalador-hotel/Instalar-Sistema-Hotel.exe**
+
+Se o navegador avisar que "o arquivo pode ser perigoso" ou "não é baixado com frequência", escolha
+**Manter** / **Manter assim mesmo** (é normal com programa novo). Se for instalar no PC do hotel por outro
+caminho, copie o arquivo para um pendrive. Leve também a **planilha mais recente** do hotel (o arquivo do Excel).
 
 ## 2. Instalar (no PC do hotel)
 
 O PC precisa ser Windows 10 ou 11.
 
-1. Passe o `Instalar-Sistema-Hotel.exe` do pendrive para a Área de Trabalho e clique duas vezes nele.
+1. Clique duas vezes no `Instalar-Sistema-Hotel.exe` (na pasta Downloads, ou copie do pendrive).
 2. Se aparecer **"O Windows protegeu o computador"**: clique em **Mais informações** → **Executar assim mesmo**.
    (Aparece porque o instalador é novo e não foi comprado de uma empresa. É normal.)
 3. Se perguntar **"Deseja permitir que este aplicativo faça alterações?"**: clique **Sim**.

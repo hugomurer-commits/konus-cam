@@ -1,5 +1,6 @@
 # Gera o instalador do Sistema do Hotel (Instalar-Sistema-Hotel.exe) num Windows do GitHub,
-# testa a instalação de verdade e deixa o .exe para baixar em "Artifacts" da execução.
+# testa a instalação de verdade e publica o .exe para download direto (sem zip, sem login):
+# https://github.com/hugomurer-commits/konus-cam/releases/download/instalador-hotel/Instalar-Sistema-Hotel.exe
 name: Instalador do hotel
 
 on:
@@ -10,7 +11,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write  # para publicar o .exe na página de downloads (Releases)
 
 concurrency:
   group: instalador-hotel-${{ github.ref }}
@@ -57,3 +58,21 @@ jobs:
           path: sistema-hotel/windows/saida/Instalar-Sistema-Hotel.exe
           retention-days: 90
           if-no-files-found: error
+
+      # Só chega aqui se o teste de instalação passou: o link direto sempre aponta para um .exe testado
+      - name: Publicar para download direto
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = 'instalador-hotel'
+          $exe = 'windows/saida/Instalar-Sistema-Hotel.exe'
+          $notas = "Instalador do Sistema do Hotel, testado no Windows. Gerado do commit $env:GITHUB_SHA ($env:GITHUB_REF_NAME). Como instalar: sistema-hotel/COMO-INSTALAR.md"
+          gh release view $tag *> $null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create $tag $exe --prerelease --target $env:GITHUB_SHA --title 'Instalador do Sistema do Hotel' --notes $notas
+          } else {
+            gh release upload $tag $exe --clobber
+            gh release edit $tag --notes $notas
+          }
+          if ($LASTEXITCODE -ne 0) { throw 'Não consegui publicar o instalador.' }
