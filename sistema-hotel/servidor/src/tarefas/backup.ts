@@ -88,6 +88,8 @@ export async function fazerBackup(ctx: Contexto): Promise<{ ok: boolean; arquivo
   const agora = ctx.agora();
   const pasta = pastaBackup(ctx);
   try {
+    // Sem pasta escolhida, usa dados\backups: cria se ainda não existe
+    if (pasta === join(ctx.dirDados, 'backups')) mkdirSync(pasta, { recursive: true });
     testarPasta(pasta);
     const hoje = dataLocal(agora);
     const diarios = join(pasta, 'diario');

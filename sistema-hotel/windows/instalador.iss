@@ -103,12 +103,12 @@ begin
   if FileExists(Dados + '\hotel.db') then
   begin
     Copia := Dados + '\antes-da-atualizacao-' + GetDateTimeString('yyyy-mm-dd-hhnn', '-', '-');
-    if not FileCopy(Dados + '\hotel.db', Copia + '.db', False) then
+    if not CopyFile(Dados + '\hotel.db', Copia + '.db', False) then
     begin
       Result := 'Não consegui copiar o banco antes de atualizar. Nada foi mudado.';
       exit;
     end;
     if FileExists(Dados + '\hotel.db-wal') then
-      FileCopy(Dados + '\hotel.db-wal', Copia + '.db-wal', False);
+      CopyFile(Dados + '\hotel.db-wal', Copia + '.db-wal', False);
   end;
 end;

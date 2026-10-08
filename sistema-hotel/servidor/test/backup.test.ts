@@ -70,4 +70,11 @@ describe('backup', () => {
     expect((await amb.api('PUT', '/api/backup/pasta', { pasta: s[0], criar: true })).status).toBe(200);
     expect(existsSync(s[0])).toBe(true);
   });
+
+  it('sem pasta escolhida, guarda em dados/backups (cria a pasta)', async () => {
+    const amb = await criarAmbiente();
+    const r = await fazerBackup(amb.ctx);
+    expect(r.ok).toBe(true);
+    expect(readdirSync(join(amb.ctx.dirDados, 'backups', 'diario'))).toHaveLength(1);
+  });
 });
