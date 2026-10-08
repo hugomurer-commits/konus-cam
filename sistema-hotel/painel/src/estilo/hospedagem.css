@@ -132,7 +132,7 @@
   .escolha-grade.quartos .icone-opcao { display: none; }
   .passo input.entrada-data { width: 100%; }
   .hospede-escolhido > .botao, .resultados-busca li > .botao { width: 100%; }
-  .resultados-busca .chip-icone { display: none; }
+  .resultados-busca .chip-icone, .hospede-escolhido .chip-icone { display: none; }
   .linha-total .valor-total { font-size: var(--fs-h2); }
   .tela-nova > .botao.enorme { font-size: var(--fs-medio); }
 

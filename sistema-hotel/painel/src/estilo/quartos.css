@@ -131,7 +131,9 @@
   .area-quartos .lista-quartos .acoes-quarto .botao { flex: 1 1 0; min-width: 0; padding-left: 6px; padding-right: 6px; gap: 6px; }
   .area-quartos .lista-clientes > li { grid-template-columns: auto minmax(0, 1fr); }
   .area-quartos .lista-clientes .historico { grid-column: 2; text-align: left; }
-  .area-quartos .ficha-numeros { grid-template-columns: minmax(0, 1fr); }
+  .area-quartos .ficha-numeros { grid-template-columns: minmax(0, 1fr); gap: 10px; }
+  .area-quartos .ficha-numeros .numero-grande { display: flex; flex-direction: row-reverse; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; }
+  .area-quartos .ficha-numeros .numero-grande .valor { font-size: var(--fs-h2); }
   .area-quartos .lista-estadias > li { grid-template-columns: auto minmax(0, 1fr); }
   .area-quartos .lista-estadias .valor-estadia { grid-column: 2; flex-direction: row; flex-wrap: wrap; align-items: center; text-align: left; }
 }
