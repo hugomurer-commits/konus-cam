@@ -1,6 +1,7 @@
 import { NavLink, Route, Routes } from 'react-router-dom';
-import { EmConstrucao } from '../../componentes/Layout';
 import { EditarQuarto, ListaQuartos } from './EditarQuartos';
+import { Mapa } from './Mapa';
+import { Hospedes } from './Hospedes';
 
 const ABAS = [
   { para: '/quartos', texto: 'Mapa', fim: true },
@@ -19,8 +20,8 @@ export function Quartos() {
         ))}
       </nav>
       <Routes>
-        <Route index element={<EmConstrucao titulo="Mapa dos quartos" />} />
-        <Route path="hospedes/*" element={<EmConstrucao titulo="Hóspedes" />} />
+        <Route index element={<Mapa />} />
+        <Route path="hospedes/*" element={<Hospedes />} />
         <Route path="editar" element={<ListaQuartos />} />
         <Route path="editar/:id" element={<EditarQuarto />} />
       </Routes>

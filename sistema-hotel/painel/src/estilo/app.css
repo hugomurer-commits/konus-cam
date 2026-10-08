@@ -292,3 +292,22 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .tela-entrada .logo { display: block; margin: 0 auto 16px; width: 240px; max-width: 70%; }
 .carregando { display: flex; align-items: center; justify-content: center; min-height: 60vh; flex-direction: column; gap: 16px; }
 .carregando img { width: 200px; }
+
+/* ===== Mapa dos quartos (linhas = quartos, colunas = dias) ===== */
+.mapa-rolagem { overflow: auto; max-height: calc(100vh - 230px); border: 1px solid var(--linha); border-radius: var(--raio); background: var(--branco); }
+.mapa { border-collapse: separate; border-spacing: 0; min-width: 100%; }
+.mapa th, .mapa td { border-right: 1px solid var(--linha); border-bottom: 1px solid var(--linha); padding: 3px; vertical-align: top; }
+.mapa thead th { position: sticky; top: 0; background: var(--branco); z-index: 2; font-size: 0.9rem; min-width: 104px; text-align: center; padding: 6px 4px; }
+.mapa .mapa-quarto { position: sticky; left: 0; background: var(--branco); z-index: 1; min-width: 64px; font-size: 1.15rem; text-align: center; vertical-align: middle; }
+.mapa thead .mapa-quarto { z-index: 3; }
+.mapa th.mapa-hoje { background: var(--chega-fundo); }
+.mapa td.mapa-hoje { background: #fffbea; }
+.mapa-celula { display: flex; flex-direction: column; gap: 3px; min-height: 52px; }
+.mapa-item {
+  display: flex; flex-direction: column; justify-content: center; border: 2px solid; border-radius: 8px;
+  padding: 2px 6px; min-height: 48px; text-decoration: none; font-size: 0.85rem; font-weight: 700;
+  line-height: 1.15; cursor: pointer; text-align: left; font-family: inherit; width: 100%;
+}
+.mapa-item .mapa-estado { font-weight: 400; font-size: 0.75rem; }
+.mapa-livre { border-style: dashed; opacity: 0.85; align-items: center; }
+.mapa-livre:hover { opacity: 1; }

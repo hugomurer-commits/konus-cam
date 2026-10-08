@@ -111,6 +111,12 @@ describe('saída e reaproveitamento do quarto (seção 4)', () => {
     await amb.api('POST', `/api/quartos/${q1}/limpo`);
     const nova = await novaHospedagem({ hospede: { nome: 'Maria' } });
     expect(nova.status).toBe(200);
+    // Mapa mostra os dois na mesma noite, em ordem
+    const mapa = (await amb.api('GET', '/api/mapa?de=2026-10-08&dias=2')).json;
+    expect(mapa.estadias.filter((e: { quarto_id: number }) => e.quarto_id === q1).map((e: { nome: string; status: string }) => [e.nome, e.status])).toEqual([
+      ['José da Silva', 'finalizada'],
+      ['Maria', 'hospedado'],
+    ]);
     // Duas diárias na mesma noite; a primeira não foi devolvida
     const noite = amb.banco.prepare(`SELECT COUNT(*) AS n, SUM(valor) AS s FROM estadia_noites WHERE data = '2026-10-08'`).get();
     expect(noite).toEqual({ n: 2, s: 40000 });

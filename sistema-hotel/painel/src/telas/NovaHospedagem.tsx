@@ -139,6 +139,17 @@ export function NovaHospedagem() {
     }
   }
 
+  // Vindo da ficha do hóspede (?hospede=ID): já começa com ele escolhido
+  useEffect(() => {
+    const id = params.get('hospede');
+    if (!id) return;
+    api
+      .get<{ hospede: HospedeBusca }>(`/api/hospedes/${id}`)
+      .then((r) => escolherHospede(r.hospede))
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   async function marcarLimpo(q: QuartoDisp) {
     await api.post(`/api/quartos/${q.id}/limpo`);
     await disp.refetch();
