@@ -1,6 +1,7 @@
 import { NavLink, Navigate, Route, Routes } from 'react-router-dom';
 import { EmConstrucao } from '../../componentes/Layout';
 import { TelaImportacao } from './Importacao';
+import { ConfigCategorias, ConfigHotel, ConfigPrecos, ConfigRecebedores, ConfigSenha } from './Formularios';
 
 const ABAS = [
   { para: 'hotel', texto: 'Hotel' },
@@ -27,7 +28,12 @@ export function Configuracoes() {
       </nav>
       <Routes>
         <Route index element={<Navigate to="hotel" replace />} />
+        <Route path="hotel" element={<ConfigHotel />} />
+        <Route path="precos" element={<ConfigPrecos />} />
+        <Route path="recebedores" element={<ConfigRecebedores />} />
+        <Route path="categorias" element={<ConfigCategorias />} />
         <Route path="importacao" element={<TelaImportacao />} />
+        <Route path="senha" element={<ConfigSenha />} />
         <Route path="*" element={<EmConstrucao titulo="Em construção" />} />
       </Routes>
     </>
