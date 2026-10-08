@@ -10,6 +10,7 @@ import { EmConstrucao, Layout } from './componentes/Layout';
 import { ExigirSessao } from './sessao';
 import { Entrar } from './telas/Entrar';
 import { PrimeiroUso } from './telas/PrimeiroUso';
+import { Configuracoes } from './telas/configuracoes/Configuracoes';
 
 const cliente = new QueryClient({
   defaultOptions: {
@@ -36,7 +37,7 @@ createRoot(document.getElementById('raiz')!).render(
               <Route path="quartos/*" element={<EmConstrucao titulo="Quartos" />} />
               <Route path="caixa/*" element={<EmConstrucao titulo="Caixa" />} />
               <Route path="contas/*" element={<EmConstrucao titulo="Contas" />} />
-              <Route path="configuracoes/*" element={<EmConstrucao titulo="Configurações" />} />
+              <Route path="configuracoes/*" element={<Configuracoes />} />
               <Route path="*" element={<EmConstrucao titulo="Página não encontrada" />} />
             </Route>
           </Routes>
