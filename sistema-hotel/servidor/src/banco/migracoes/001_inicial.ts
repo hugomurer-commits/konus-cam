@@ -256,6 +256,8 @@ CREATE TABLE contas_recorrentes (
   avisar_dias_antes INTEGER NOT NULL DEFAULT 3,
   ativa INTEGER NOT NULL DEFAULT 1,
   obs TEXT NOT NULL DEFAULT '',
+  -- primeiro mês gerado ('AAAA-MM'); definido na primeira geração
+  inicio_competencia TEXT,
   ${CARIMBOS}
 );
 
@@ -292,6 +294,7 @@ CREATE TABLE funcionarias (
   salario INTEGER NOT NULL DEFAULT 0 CHECK (salario >= 0),
   dia_pagamento INTEGER NOT NULL DEFAULT 5 CHECK (dia_pagamento BETWEEN 1 AND 31),
   ativa INTEGER NOT NULL DEFAULT 1,
+  inicio_competencia TEXT,
   ${CARIMBOS}
 );
 

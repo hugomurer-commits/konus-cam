@@ -15,6 +15,8 @@ import { Quartos } from './telas/quartos/Quartos';
 import { NovaHospedagem } from './telas/NovaHospedagem';
 import { TelaEstadia } from './telas/Estadia';
 import { Hoje } from './telas/Hoje';
+import { Caixa } from './telas/caixa/Caixa';
+import { Contas } from './telas/contas/Contas';
 
 const cliente = new QueryClient({
   defaultOptions: {
@@ -41,8 +43,8 @@ createRoot(document.getElementById('raiz')!).render(
               <Route path="nova-hospedagem" element={<NovaHospedagem />} />
               <Route path="estadia/:id" element={<TelaEstadia />} />
               <Route path="quartos/*" element={<Quartos />} />
-              <Route path="caixa/*" element={<EmConstrucao titulo="Caixa" />} />
-              <Route path="contas/*" element={<EmConstrucao titulo="Contas" />} />
+              <Route path="caixa/*" element={<Caixa />} />
+              <Route path="contas/*" element={<Contas />} />
               <Route path="configuracoes/*" element={<Configuracoes />} />
               <Route path="*" element={<EmConstrucao titulo="Página não encontrada" />} />
             </Route>
