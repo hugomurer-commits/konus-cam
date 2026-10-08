@@ -29,9 +29,14 @@ ArchitecturesInstallIn64BitMode=x64compatible
 PrivilegesRequired=admin
 WizardStyle=modern
 CloseApplications=no
+; Node 22 precisa de Windows 10 ou 11, 64 bits
+MinVersion=10.0
 
 [Languages]
 Name: "pt"; MessagesFile: "compiler:Languages\BrazilianPortuguese.isl"
+
+[Tasks]
+Name: "energia"; Description: "Deixar o computador sempre ligado (nunca suspender nem hibernar na tomada)"
 
 [Dirs]
 ; Banco, fotos, backups locais e logs. Nunca é apagada, nem ao desinstalar.
@@ -71,6 +76,9 @@ Filename: "{app}\nssm\nssm.exe"; Parameters: "set {#Servico} AppStderr ""{app}\d
 Filename: "{app}\nssm\nssm.exe"; Parameters: "set {#Servico} AppRotateFiles 1"; Flags: runhidden waituntilterminated
 Filename: "{app}\nssm\nssm.exe"; Parameters: "set {#Servico} AppRotateBytes 2000000"; Flags: runhidden waituntilterminated
 Filename: "{app}\nssm\nssm.exe"; Parameters: "start {#Servico}"; Flags: runhidden waituntilterminated; StatusMsg: "Iniciando o sistema..."
+; O sistema roda no próprio PC: ele não pode dormir
+Filename: "{sys}\powercfg.exe"; Parameters: "/change standby-timeout-ac 0"; Flags: runhidden waituntilterminated; Tasks: energia
+Filename: "{sys}\powercfg.exe"; Parameters: "/change hibernate-timeout-ac 0"; Flags: runhidden waituntilterminated; Tasks: energia
 Filename: "http://localhost:{#Porta}/"; Description: "Abrir o sistema agora"; Flags: shellexec postinstall nowait skipifsilent
 
 [UninstallRun]

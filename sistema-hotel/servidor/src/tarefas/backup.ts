@@ -1,5 +1,5 @@
 import { copyFileSync, existsSync, mkdirSync, readdirSync, renameSync, rmSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import type { Banco } from '../banco/conexao.js';
 import type { Contexto } from '../contexto.js';
 import { dataLocal, minutosDoDia } from '../dominio/datas.js';
@@ -27,6 +27,38 @@ export function testarPasta(pasta: string) {
   } catch {
     throw new ErroUsuario(`O sistema não tem permissão para gravar em "${pasta}".`);
   }
+}
+
+/**
+ * Pastas do Google Drive para computador (modo "espelhar") encontradas no Windows.
+ * O serviço roda como sistema e não enxerga a letra G: do modo "streaming", só pastas reais.
+ */
+export function sugerirPastasDrive(raizUsuarios = 'C:\\Users'): string[] {
+  if (process.platform !== 'win32' && raizUsuarios === 'C:\\Users') return [];
+  const nomes = ['Meu Drive', 'My Drive', join('Google Drive', 'Meu Drive'), join('Google Drive', 'My Drive')];
+  const achadas: string[] = [];
+  let usuarios: string[] = [];
+  try {
+    usuarios = readdirSync(raizUsuarios).filter((u) => !['Public', 'Default', 'Default User', 'All Users'].includes(u));
+  } catch {
+    return [];
+  }
+  for (const u of usuarios) {
+    for (const n of nomes) {
+      const drive = join(raizUsuarios, u, n);
+      try {
+        if (statSync(drive).isDirectory()) achadas.push(join(drive, 'Backup Hotel'));
+      } catch {
+        /* não existe */
+      }
+    }
+  }
+  return achadas;
+}
+
+/** Cria a pasta do backup se a de cima existir (ex.: "Backup Hotel" dentro do "Meu Drive"). */
+export function criarPastaSePreciso(pasta: string) {
+  if (!existsSync(pasta) && existsSync(dirname(pasta))) mkdirSync(pasta);
 }
 
 function manterUltimos(pasta: string, prefixo: string, quantos: number) {

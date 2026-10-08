@@ -14,6 +14,7 @@ interface EstadoBackup {
   atrasado: boolean;
   historico: { feito_em: string; ok: number; erro: string | null; tamanho: number | null }[];
   manter: { diarios: number; mensais: number };
+  sugestoes: string[];
 }
 
 export function useEstadoBackup() {
@@ -29,9 +30,13 @@ export function ConfigBackup() {
     if (dados.data) setPasta(dados.data.configurada ? dados.data.pasta : '');
   }, [dados.data]);
   const salvarPasta = useMutation({
-    mutationFn: () => api.put('/api/backup/pasta', { pasta }),
+    mutationFn: async (p?: string) => {
+      await api.put('/api/backup/pasta', { pasta: p ?? pasta, criar: p !== undefined });
+      // Escolheu a pasta sugerida: já faz o primeiro backup
+      if (p !== undefined) await api.post('/api/backup/agora');
+    },
     onSuccess: () => {
-      cliente.invalidateQueries({ queryKey: ['backup'] });
+      cliente.invalidateQueries();
       avisar('Pasta do backup salva.');
     },
   });
@@ -65,6 +70,19 @@ export function ConfigBackup() {
           {agora.isPending ? 'Fazendo backup…' : 'Fazer backup agora'}
         </button>
       </div>
+      {d.sugestoes.length > 0 && d.sugestoes[0] !== d.pasta && (
+        <div className="cartao">
+          <h2>Achei o Google Drive neste computador</h2>
+          {d.sugestoes.map((s) => (
+            <div key={s} className="botoes" style={{ marginBottom: 8 }}>
+              <code style={{ flex: 1 }}>{s}</code>
+              <button className="botao principal grande" disabled={salvarPasta.isPending} onClick={() => salvarPasta.mutate(s)}>
+                Guardar o backup aqui
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
       <div className="cartao">
         <h2>Onde guardar</h2>
         <p>
@@ -77,7 +95,7 @@ export function ConfigBackup() {
           <span className="ajuda">Vazio = guarda só neste computador ({d.pastaPadrao}). Não protege se o computador estragar.</span>
         </div>
         <MensagemErro erro={salvarPasta.error} />
-        <button className="botao" onClick={() => salvarPasta.mutate()}>
+        <button className="botao" onClick={() => salvarPasta.mutate(undefined)}>
           Salvar pasta
         </button>
       </div>

@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import Database from 'better-sqlite3';
 import { describe, expect, it } from 'vitest';
-import { fazerBackup, precisaBackup } from '../src/tarefas/backup.js';
+import { fazerBackup, precisaBackup, sugerirPastasDrive } from '../src/tarefas/backup.js';
 import { criarAmbiente } from './ajuda.js';
 
 describe('backup', () => {
@@ -51,5 +51,16 @@ describe('backup', () => {
     const st = (await amb.api('GET', '/api/backup')).json;
     expect(st.atrasado).toBe(true);
     expect(st.historico[0].ok).toBe(0);
+  });
+
+  it('acha a pasta do Google Drive (modo espelhar) e cria "Backup Hotel" dentro', async () => {
+    const usuarios = mkdtempSync(join(tmpdir(), 'usuarios-'));
+    mkdirSync(join(usuarios, 'Hotel', 'Meu Drive'), { recursive: true });
+    mkdirSync(join(usuarios, 'Public', 'Meu Drive'), { recursive: true });
+    const s = sugerirPastasDrive(usuarios);
+    expect(s).toEqual([join(usuarios, 'Hotel', 'Meu Drive', 'Backup Hotel')]);
+    const amb = await criarAmbiente();
+    expect((await amb.api('PUT', '/api/backup/pasta', { pasta: s[0], criar: true })).status).toBe(200);
+    expect(existsSync(s[0])).toBe(true);
   });
 });

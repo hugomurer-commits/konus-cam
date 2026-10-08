@@ -1,0 +1,59 @@
+# Gera o instalador do Sistema do Hotel (Instalar-Sistema-Hotel.exe) num Windows do GitHub,
+# testa a instalação de verdade e deixa o .exe para baixar em "Artifacts" da execução.
+name: Instalador do hotel
+
+on:
+  push:
+    paths:
+      - 'sistema-hotel/**'
+      - '.github/workflows/instalador-hotel.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: instalador-hotel-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  instalador:
+    name: Gerar e testar o instalador
+    runs-on: windows-2022
+    timeout-minutes: 40
+    defaults:
+      run:
+        shell: pwsh
+        working-directory: sistema-hotel
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: sistema-hotel/package-lock.json
+
+      - name: Inno Setup
+        run: |
+          if (-not (Test-Path "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe")) {
+            choco install innosetup -y --no-progress
+          }
+
+      - name: Testes, build e instalador
+        run: ./windows/build-windows.ps1
+
+      - name: Instalar, reiniciar, atualizar e desinstalar
+        run: ./windows/testar-instalador.ps1
+
+      - name: Log do serviço (se algo falhou)
+        if: failure()
+        run: |
+          if (Test-Path C:\SistemaHotel\dados\logs\servico.log) { Get-Content C:\SistemaHotel\dados\logs\servico.log -Tail 100 }
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Instalar-Sistema-Hotel
+          path: sistema-hotel/windows/saida/Instalar-Sistema-Hotel.exe
+          retention-days: 90
+          if-no-files-found: error
