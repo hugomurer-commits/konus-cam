@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import { CircleAlert, CircleCheck, CircleHelp, TriangleAlert, Undo2, type LucideIcon } from 'lucide-react';
 
 // Confirmação clara antes de mexer em dinheiro + aviso com "Desfazer" por alguns segundos (seção 5).
 
@@ -8,12 +9,20 @@ interface PedidoConfirmacao {
   confirmar?: string;
   cancelar?: string;
   perigo?: boolean;
+  /** Botão de confirmar verde (dinheiro entrando, check-in…) */
+  verde?: boolean;
+  icone?: LucideIcon;
+  /** Classe de tom do ícone (tom-livre, tom-sai…) */
+  tom?: string;
+  /** Recibo em destaque: valor grande + como/quem */
+  recibo?: { valor: ReactNode; detalhe?: ReactNode };
 }
 
 interface Aviso {
   id: number;
   texto: string;
   erro?: boolean;
+  segundos: number;
   desfazer?: () => Promise<unknown> | unknown;
 }
 
@@ -50,8 +59,9 @@ export function ProvedorInteracao({ children }: { children: ReactNode }) {
   const avisar = useCallback<Interacao['avisar']>(
     (texto, opcoes = {}) => {
       const id = proximo.current++;
-      setAvisos((a) => [...a.slice(-2), { id, texto, ...opcoes }]);
-      setTimeout(() => remover(id), (opcoes.desfazer ? SEGUNDOS_DESFAZER : 5) * 1000);
+      const segundos = opcoes.desfazer ? SEGUNDOS_DESFAZER : 5;
+      setAvisos((a) => [...a.slice(-2), { id, texto, segundos, ...opcoes }]);
+      setTimeout(() => remover(id), segundos * 1000);
     },
     [remover],
   );
@@ -63,9 +73,11 @@ export function ProvedorInteracao({ children }: { children: ReactNode }) {
       <div className="avisos" aria-live="polite">
         {avisos.map((a) => (
           <div key={a.id} className={`aviso${a.erro ? ' erro' : ''}`} role={a.erro ? 'alert' : 'status'}>
+            {a.erro ? <CircleAlert aria-hidden="true" /> : <CircleCheck aria-hidden="true" />}
             <span className="texto">{a.texto}</span>
             {a.desfazer && (
               <button
+                className="desfazer"
                 onClick={async () => {
                   remover(a.id);
                   try {
@@ -76,12 +88,14 @@ export function ProvedorInteracao({ children }: { children: ReactNode }) {
                   }
                 }}
               >
+                <Undo2 aria-hidden="true" />
                 Desfazer
               </button>
             )}
-            <button aria-label="Fechar aviso" onClick={() => remover(a.id)}>
-              ✕
+            <button className="fechar" onClick={() => remover(a.id)}>
+              Fechar
             </button>
+            <span className="tempo" aria-hidden="true" style={{ ['--duracao' as string]: `${a.segundos}s` }} />
           </div>
         ))}
       </div>
@@ -100,15 +114,27 @@ function JanelaConfirmacao({ pedido }: { pedido: PedidoConfirmacao & { responder
   return (
     <div className="fundo-janela" onClick={() => pedido.responder(false)}>
       <div className="janela" role="dialog" aria-modal="true" aria-labelledby="titulo-confirmacao" onClick={(e) => e.stopPropagation()}>
-        <h2 id="titulo-confirmacao">{pedido.titulo}</h2>
+        <div className="janela-topo">
+          <JanelaIcone
+            icone={pedido.icone ?? (pedido.perigo ? TriangleAlert : CircleHelp)}
+            tom={pedido.tom ?? (pedido.perigo ? 'tom-perigo' : pedido.verde ? 'tom-livre' : 'tom-ocupado')}
+          />
+          <h2 id="titulo-confirmacao">{pedido.titulo}</h2>
+        </div>
         <div className="mensagem">{pedido.mensagem}</div>
+        {pedido.recibo && (
+          <div className="recibo">
+            <span className="valor">{pedido.recibo.valor}</span>
+            {pedido.recibo.detalhe && <span className="forma">{pedido.recibo.detalhe}</span>}
+          </div>
+        )}
         <div className="botoes direita">
           <button className="botao grande" onClick={() => pedido.responder(false)}>
             {pedido.cancelar ?? 'Voltar'}
           </button>
           <button
             ref={botaoOk}
-            className={`botao grande principal${pedido.perigo ? ' perigo' : ''}`}
+            className={`botao grande principal${pedido.perigo ? ' perigo' : pedido.verde ? ' verde' : ''}`}
             onClick={() => pedido.responder(true)}
           >
             {pedido.confirmar ?? 'Confirmar'}
@@ -125,8 +151,28 @@ export function useInteracao(): Interacao {
   return c;
 }
 
+function JanelaIcone({ icone: Icone, tom }: { icone: LucideIcon; tom: string }) {
+  return (
+    <span className={`chip-icone ${tom}`} aria-hidden="true">
+      <Icone />
+    </span>
+  );
+}
+
 /** Janela genérica (formulários de Recebi, Paguei etc.). */
-export function Janela({ titulo, aoFechar, children }: { titulo: string; aoFechar: () => void; children: ReactNode }) {
+export function Janela({
+  titulo,
+  aoFechar,
+  children,
+  icone,
+  tom = 'tom-ocupado',
+}: {
+  titulo: string;
+  aoFechar: () => void;
+  children: ReactNode;
+  icone?: LucideIcon;
+  tom?: string;
+}) {
   useEffect(() => {
     const tecla = (e: KeyboardEvent) => e.key === 'Escape' && aoFechar();
     window.addEventListener('keydown', tecla);
@@ -135,8 +181,11 @@ export function Janela({ titulo, aoFechar, children }: { titulo: string; aoFecha
   return (
     <div className="fundo-janela" onClick={aoFechar}>
       <div className="janela" role="dialog" aria-modal="true" aria-label={titulo} onClick={(e) => e.stopPropagation()}>
-        <h2>{titulo}</h2>
-        {children}
+        <div className="janela-topo">
+          {icone && <JanelaIcone icone={icone} tom={tom} />}
+          <h2>{titulo}</h2>
+        </div>
+        <div className="corpo-janela">{children}</div>
       </div>
     </div>
   );

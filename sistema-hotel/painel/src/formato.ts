@@ -116,3 +116,15 @@ export const GRUPOS: Record<string, string> = {
   casa_pessoal: 'Casa / pessoal',
   retirada: 'Retiradas',
 };
+
+const MINUSCULAS = new Set(['de', 'da', 'do', 'das', 'dos', 'e']);
+/** "HAZAEL FRANCISCO DOS SANTOS" → "Hazael Francisco dos Santos" (só para mostrar; o cadastro fica como foi digitado). */
+export function nomeProprio(nome: string | null | undefined): string {
+  if (!nome) return '';
+  if (nome !== nome.toUpperCase()) return nome; // já tem maiúsculas e minúsculas: respeita
+  return nome
+    .toLowerCase()
+    .split(/(\s+)/)
+    .map((p, i) => (i > 0 && MINUSCULAS.has(p) ? p : p.charAt(0).toUpperCase() + p.slice(1)))
+    .join('');
+}
