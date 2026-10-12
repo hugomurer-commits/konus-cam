@@ -1,0 +1,6 @@
+config.ini
+link_publico.txt
+*.log
+*.log.*
+.venv/
+__pycache__/
